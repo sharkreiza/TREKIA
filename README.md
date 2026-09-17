@@ -1,8 +1,10 @@
  # TREKIA
 
-| Repositorio : github.com/sharkreiza/TREKIA](https://github.com/sharkreiza/TREKIA) 
-| Prototipo en Figma : https://www.figma.com/design/WMb2Anjua4phaU07XYjBcN/Sin-t%C3%ADtulo
-
+| Recurso | Enlace |
+|---|---|
+| Repositorio | [github.com/sharkreiza/TREKIA](https://github.com/sharkreiza/TREKIA) |
+| Prototipo en Figma | [Ver prototipo](https://www.figma.com/design/WMb2Anjua4phaU07XYjBcN/Sin-t%C3%ADtulo) |
+| Informe EP1 | [Ver informe](docs/Informe-EP1.pdf) |
 
 
 ## Integrantes y responsabilidades
