@@ -3,26 +3,37 @@ import { Usuario, login as loginService } from '../services/authService';
 
 interface AuthContextType {
   user: Usuario | null;
-  login: (correo: string, password: string) => Promise<Usuario>;
+  login: (correo: string, password: string, recordar: boolean) => Promise<Usuario>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const guardado = localStorage.getItem('usuario');
-  const [user, setUser] = useState<Usuario | null>(guardado ? JSON.parse(guardado) : null);
+function sesionGuardada() {
+  const guardado = localStorage.getItem('usuario') || sessionStorage.getItem('usuario');
+  return guardado ? JSON.parse(guardado) : null;
+}
 
-  async function login(correo: string, password: string) {
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<Usuario | null>(sesionGuardada());
+
+  async function login(correo: string, password: string, recordar: boolean) {
     const usuario = await loginService(correo, password);
     setUser(usuario);
-    localStorage.setItem('usuario', JSON.stringify(usuario));
+
+    if (recordar) {
+      localStorage.setItem('usuario', JSON.stringify(usuario));
+    } else {
+      sessionStorage.setItem('usuario', JSON.stringify(usuario));
+    }
+
     return usuario;
   }
 
   function logout() {
     setUser(null);
     localStorage.removeItem('usuario');
+    sessionStorage.removeItem('usuario');
   }
 
   return (

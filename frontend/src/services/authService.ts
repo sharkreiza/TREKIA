@@ -26,3 +26,11 @@ export async function login(correo: string, password: string): Promise<Usuario> 
     rol: encontrado.rol,
   };
 }
+
+export async function registrar(nombre: string, correo: string, password: string) {
+  if (usuarios.some((u) => u.correo === correo)) {
+    throw new Error('Este correo ya está registrado');
+  }
+
+  usuarios.push({ id: usuarios.length + 1, nombre, correo, password, rol: 'usuario' });
+}

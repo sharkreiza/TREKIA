@@ -1,71 +1,69 @@
-import { IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonMenu, IonMenuToggle, IonTitle, IonToolbar } from '@ionic/react';
-import { useNavigate } from 'react-router-dom';
+import { IonContent, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonMenu, IonMenuToggle } from '@ionic/react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  addCircleOutline, documentTextOutline, logOutOutline, mapOutline,
-  peopleCircleOutline, peopleOutline, personOutline, settingsOutline,
+  addCircle, documentText, exitOutline, home, people, peopleCircle, person, settings,
 } from 'ionicons/icons';
 import { useAuth } from '../context/AuthContext';
+import './MenuLateral.css';
 
 const opcionesUsuario = [
-  { titulo: 'Mapa', url: '/app/mapa', icono: mapOutline },
-  { titulo: 'Grupos', url: '/app/grupos', icono: peopleOutline },
-  { titulo: 'Amigos', url: '/app/amigos', icono: peopleCircleOutline },
-  { titulo: 'Proponer ruta', url: '/app/propuesta', icono: addCircleOutline },
-  { titulo: 'Perfil', url: '/app/perfil', icono: personOutline },
-  { titulo: 'Configuración', url: '/app/configuracion', icono: settingsOutline },
+  { titulo: 'Mapa', url: '/app/mapa', icono: home },
+  { titulo: 'Grupos', url: '/app/grupos', icono: people },
+  { titulo: 'Amigos', url: '/app/amigos', icono: peopleCircle },
+  { titulo: 'Proponer ruta', url: '/app/propuesta', icono: addCircle },
+  { titulo: 'Perfil', url: '/app/perfil', icono: person },
+  { titulo: 'Configuración', url: '/app/configuracion', icono: settings },
 ];
 
 const opcionesAdmin = [
-  { titulo: 'Rutas propuestas', url: '/admin/propuestas', icono: documentTextOutline },
+  { titulo: 'Rutas propuestas', url: '/admin/propuestas', icono: documentText },
 ];
 
 export default function MenuLateral() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   function cerrarSesion() {
     logout();
     navigate('/login', { replace: true });
   }
 
-  return (
-    <IonMenu contentId="main" disabled={!user}>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Trekia</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+  function opcion(titulo: string, url: string, icono: string) {
+    return (
+      <IonMenuToggle key={url} autoHide={false}>
+        <IonItem
+          routerLink={url}
+          routerDirection="root"
+          lines="inset"
+          detail={false}
+          className={location.pathname.startsWith(url) ? 'menu-activo' : ''}
+        >
+          <IonIcon slot="start" icon={icono} />
+          <IonLabel>{titulo}</IonLabel>
+        </IonItem>
+      </IonMenuToggle>
+    );
+  }
 
+  return (
+    <IonMenu contentId="main" disabled={!user} className="menu-lateral">
       <IonContent>
         <IonList>
-          {opcionesUsuario.map((opcion) => (
-            <IonMenuToggle key={opcion.url} autoHide={false}>
-              <IonItem routerLink={opcion.url} routerDirection="root" lines="none">
-                <IonIcon slot="start" icon={opcion.icono} />
-                <IonLabel>{opcion.titulo}</IonLabel>
-              </IonItem>
-            </IonMenuToggle>
-          ))}
+          {opcionesUsuario.map((o) => opcion(o.titulo, o.url, o.icono))}
         </IonList>
 
         {user?.rol === 'admin' && (
           <IonList>
             <IonListHeader>Administración</IonListHeader>
-            {opcionesAdmin.map((opcion) => (
-              <IonMenuToggle key={opcion.url} autoHide={false}>
-                <IonItem routerLink={opcion.url} routerDirection="root" lines="none">
-                  <IonIcon slot="start" icon={opcion.icono} />
-                  <IonLabel>{opcion.titulo}</IonLabel>
-                </IonItem>
-              </IonMenuToggle>
-            ))}
+            {opcionesAdmin.map((o) => opcion(o.titulo, o.url, o.icono))}
           </IonList>
         )}
 
         <IonList>
           <IonMenuToggle autoHide={false}>
-            <IonItem button lines="none" onClick={cerrarSesion}>
-              <IonIcon slot="start" icon={logOutOutline} />
+            <IonItem button lines="inset" detail={false} onClick={cerrarSesion}>
+              <IonIcon slot="start" icon={exitOutline} />
               <IonLabel>Cerrar sesión</IonLabel>
             </IonItem>
           </IonMenuToggle>

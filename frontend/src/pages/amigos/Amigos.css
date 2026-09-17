@@ -1,0 +1,49 @@
+.amigos {
+  --background: #105666;
+  color: #ffffff;
+}
+
+.amigos h2 {
+  font-size: 28px;
+  margin: 8px 0 16px;
+}
+
+.amigo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+}
+
+.amigo-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #d9d9d9;
+  color: #666666;
+  font-size: 40px;
+}
+
+.amigo-info {
+  flex: 1;
+  cursor: pointer;
+}
+
+.amigo-nombre {
+  font-size: 20px;
+  margin: 0;
+}
+
+.amigo-detalle {
+  font-size: 14px;
+  margin: 2px 0 0;
+  opacity: 0.85;
+}
+
+.amigos-vacio {
+  opacity: 0.8;
+}

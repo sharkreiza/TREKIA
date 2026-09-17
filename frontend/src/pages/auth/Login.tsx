@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { IonButton, IonContent, IonInput, IonPage, IonText } from '@ionic/react';
+import { IonButton, IonCheckbox, IonContent, IonInput, IonPage, IonRouterLink, IonSpinner } from '@ionic/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { paginaInicio } from '../../routes/Proteccion';
+import './Auth.css';
 
 export default function Login() {
   const { login } = useAuth();
@@ -10,60 +11,95 @@ export default function Login() {
 
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [recordar, setRecordar] = useState(false);
+  const [errores, setErrores] = useState({ correo: '', password: '' });
+  const [errorGeneral, setErrorGeneral] = useState('');
+  const [cargando, setCargando] = useState(false);
 
   async function iniciarSesion() {
-    setError('');
+    const nuevosErrores = { correo: '', password: '' };
 
-    if (correo === '' || password === '') {
-      setError('Ingresa tu correo y contraseña');
+    if (correo === '') {
+      nuevosErrores.correo = 'Ingresa tu correo';
+    } else if (!correo.includes('@') || !correo.includes('.')) {
+      nuevosErrores.correo = 'El correo no tiene un formato válido';
+    }
+
+    if (password === '') {
+      nuevosErrores.password = 'Ingresa tu contraseña';
+    }
+
+    setErrores(nuevosErrores);
+    setErrorGeneral('');
+
+    if (nuevosErrores.correo || nuevosErrores.password) {
       return;
     }
 
+    setCargando(true);
     try {
-      const usuario = await login(correo, password);
+      const usuario = await login(correo, password, recordar);
       navigate(paginaInicio(usuario.rol), { replace: true });
     } catch {
-      setError('Correo o contraseña incorrectos');
+      setErrorGeneral('Correo o contraseña incorrectos');
     }
+    setCargando(false);
   }
 
   return (
     <IonPage>
-      <IonContent className="ion-padding">
-        <h1 style={{ fontFamily: 'Rationale', fontSize: '48px', textAlign: 'center' }}>Trekia</h1>
+      <IonContent>
+        <div className="auth">
+          <div className="auth-imagen" />
 
-        <IonInput
-          label="Correo"
-          labelPlacement="floating"
-          fill="outline"
-          type="email"
-          value={correo}
-          onIonInput={(e) => setCorreo(e.detail.value ?? '')}
-        />
-        <br />
-        <IonInput
-          label="Contraseña"
-          labelPlacement="floating"
-          fill="outline"
-          type="password"
-          value={password}
-          onIonInput={(e) => setPassword(e.detail.value ?? '')}
-        />
+          <div className="auth-formulario">
+            <h1 className="auth-logo">Trekia</h1>
+            <h2 className="auth-titulo">Bienvenido de vuelta</h2>
+            <p className="auth-subtitulo">Ingresa tus datos para entrar a tu cuenta</p>
 
-        {error && (
-          <IonText color="danger">
-            <p>{error}</p>
-          </IonText>
-        )}
+            <IonInput
+              className={`auth-campo ${errores.correo ? 'ion-invalid ion-touched' : ''}`}
+              label="Correo"
+              labelPlacement="stacked"
+              fill="outline"
+              type="email"
+              placeholder="nombre@correo.cl"
+              value={correo}
+              errorText={errores.correo}
+              onIonInput={(e) => setCorreo(e.detail.value ?? '')}
+            />
 
-        <IonButton expand="block" className="ion-margin-top" onClick={iniciarSesion}>
-          Iniciar sesión
-        </IonButton>
+            <IonInput
+              className={`auth-campo ${errores.password ? 'ion-invalid ion-touched' : ''}`}
+              label="Contraseña"
+              labelPlacement="stacked"
+              fill="outline"
+              type="password"
+              placeholder="Tu contraseña"
+              value={password}
+              errorText={errores.password}
+              onIonInput={(e) => setPassword(e.detail.value ?? '')}
+            />
 
-        <IonButton expand="block" fill="clear" routerLink="/registro">
-          Crear cuenta
-        </IonButton>
+            <IonCheckbox
+              labelPlacement="end"
+              checked={recordar}
+              onIonChange={(e) => setRecordar(e.detail.checked)}
+            >
+              Recordarme en este equipo
+            </IonCheckbox>
+
+            {errorGeneral && <p className="auth-error">{errorGeneral}</p>}
+
+            <IonButton expand="block" className="ion-margin-top" onClick={iniciarSesion} disabled={cargando}>
+              {cargando ? <IonSpinner name="crescent" /> : 'Iniciar sesión'}
+            </IonButton>
+
+            <p className="auth-pie">
+              ¿No tienes cuenta? <IonRouterLink routerLink="/registro">Regístrate</IonRouterLink>
+            </p>
+          </div>
+        </div>
       </IonContent>
     </IonPage>
   );
