@@ -1,0 +1,11 @@
+.menu-lateral ion-content {
+  --padding-top: 16px;
+}
+
+.menu-lateral ion-icon {
+  color: #4caf50;
+}
+
+.menu-activo {
+  --background: #c4c4c4;
+}

@@ -1,0 +1,52 @@
+.mapa-contenedor {
+  position: relative;
+  height: 100%;
+  padding: 16px;
+  background: #105666;
+}
+
+.mapa {
+  height: 100%;
+  border: 6px solid #839958;
+}
+
+.boton-filtros {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  z-index: 1000;
+}
+
+.panel-filtros {
+  position: absolute;
+  top: 72px;
+  right: 28px;
+  z-index: 1000;
+  width: 320px;
+  max-width: calc(100% - 56px);
+  padding: 8px 20px 16px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.panel-filtros h3 {
+  font-size: 20px;
+  margin: 16px 0 8px;
+}
+
+.panel-filtros .resultado {
+  font-size: 13px;
+  color: #666666;
+  margin: 8px 0 0;
+}
+
+.tarjeta-ruta {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 28px;
+  z-index: 1000;
+  max-width: 380px;
+  margin: 0;
+}
