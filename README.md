@@ -3,13 +3,14 @@
 | Recurso | Enlace |
 |---|---|
 | Repositorio | [github.com/sharkreiza/TREKIA](https://github.com/sharkreiza/TREKIA) |
-| Prototipo en Figma | [Ver prototipo](https://www.figma.com/design/WMb2Anjua4phaU07XYjBcN/Sin-t%C3%ADtulo) |
+| Prototipo en Figma | [Ver prototipo](https://www.figma.com/design/2TYPZLo0IrNCWRyVobiGK7/Sin-t%C3%ADtulo) |
 | Informe EP1 | [Ver informe](docs/Informe-EP1.pdf) |
 
 
 ## Integrantes y responsabilidades
 
 | Integrante | Responsabilidades |
+|---|---|
 | Antonia Albar | _parte 1.1 y 1.2_ |
 | Vicente Girardin | _figma_ |
 | Camila Ramirez | _1.4,1.5,1.6_ |
@@ -52,9 +53,9 @@ El problema se divide en tres partes:
 - Mapa interactivo con marcadores de rutas y filtros.
 - Ficha de cada ruta con dificultad, distancia, duración y comentarios.
 - Creación y búsqueda de grupos de trekking, con solicitudes de participación.
-- Perfil de usuario y lista de amigos con solicitudes de amistad.
+- Comunidad con publicaciones, grupos, eventos y solicitudes de amistad.
 - Propuesta de rutas nuevas.
-- Configuración de la cuenta.
+- Cuenta con perfil, estadísticas y configuración.
 - Panel de administrador para aprobar o rechazar rutas propuestas.
 
 
@@ -92,6 +93,7 @@ El problema se divide en tres partes:
 ## Tecnologías y herramientas
 
 | Área | Tecnología |
+|---|---|
 | Frontend | Ionic 9, React 19, TypeScript |
 | Navegación | React Router 6 (`@ionic/react-router`) |
 | Mapa | Leaflet con mapas de OpenStreetMap |
@@ -152,10 +154,11 @@ También se puede crear una cuenta nueva desde **Registro**, aunque se borra al 
 
 ### Qué probar
 
-- Entrar sin sesión a `/app/mapa` redirige a `/login`.
-- Entrar como usuario a `/admin/propuestas` redirige a `/app/mapa`.
-- En el **Mapa**, usar el botón **Filtros** y tocar un marcador para ver la ruta.
-- En **Amigos**, aceptar o rechazar una solicitud.
+- Entrar sin sesión a `/app/inicio` redirige a `/login`.
+- Entrar como usuario a `/admin/propuestas` redirige a `/app/inicio`.
+- En **Inicio**, tocar un marcador del mapa o una categoría.
+- En **Explorar rutas**, usar el botón **Filtros**.
+- En **Comunidad**, publicar algo y aceptar o rechazar una solicitud de amistad.
 
 ---
 
@@ -170,14 +173,14 @@ frontend/
     ├── context/           Manejo de la sesión (AuthContext)
     ├── pages/             Pantallas agrupadas por sección
     │   ├── admin/
-    │   ├── amigos/
     │   ├── auth/
-    │   ├── configuracion/
+    │   ├── comunidad/
+    │   ├── cuenta/
     │   ├── grupos/
-    │   ├── perfil/
+    │   ├── inicio/
     │   └── rutas/
     ├── routes/            Rutas, pestañas y rutas protegidas
-    ├── services/          Datos de rutas, amigos y autenticación
+    ├── services/          Datos de rutas, grupos, comunidad y autenticación
     ├── theme/             Colores y tipografías
     └── App.tsx
 ```
@@ -199,16 +202,16 @@ frontend/
 
 | Ruta | Vista |
 |---|---|
-| `/app/mapa` | Mapa de rutas |
-| `/app/mapa/ruta/:id` | Detalle de una ruta |
+| `/app/inicio` | Inicio, con mapa, rutas destacadas y próximos grupos |
+| `/app/rutas` | Explorar rutas, con buscador y filtros |
+| `/app/rutas/:id` | Detalle de una ruta |
 | `/app/grupos` | Listado de grupos |
 | `/app/grupos/nuevo` | Crear grupo |
 | `/app/grupos/:id` | Detalle de un grupo |
-| `/app/amigos` | Amigos y solicitudes |
+| `/app/comunidad` | Comunidad, publicaciones y solicitudes de amistad |
 | `/app/propuesta` | Proponer una ruta |
-| `/app/perfil` | Perfil propio |
-| `/app/perfil/:userId` | Perfil de otro usuario |
-| `/app/configuracion` | Configuración de la cuenta |
+| `/app/cuenta` | Cuenta, perfil y configuración |
+| `/app/cuenta/:userId` | Perfil de otro usuario |
 
 **Protegidas: Administrador**
 
@@ -219,34 +222,34 @@ frontend/
 
 ### Árbol de rutas
 
-Árbol de rutas : docs/diagramas/arbol-rutas.png
+![Árbol de rutas](docs/diagramas/arbol-rutas.png)
 
 ### Acceso según rol
 
 - Si alguien sin sesión intenta entrar a `/app` o `/admin`, se le redirige a `/login`.
-- Si un usuario que no es administrador intenta entrar a `/admin`, se le redirige a `/app/mapa`.
+- Si un usuario que no es administrador intenta entrar a `/admin`, se le redirige a `/app/inicio`.
 - Si alguien con sesión entra a `/login` o `/registro`, se le lleva a su pantalla de inicio.
 
-Redirecciones : docs/diagramas/redirecciones.png 
+![Redirecciones](docs/diagramas/redirecciones.png) 
 
 ### Navegación en móvil y web
 
-- **Móvil:** barra inferior con Mapa, Grupos, Amigos y Perfil. El resto de las opciones está en el menú desplegable.
-- **Web:** menú lateral fijo con todas las opciones.
+- **Móvil:** barra inferior con Inicio, Rutas, Grupos, Comunidad y Cuenta. Proponer ruta y cerrar sesión están en el menú desplegable.
+- **Web:** menú lateral fijo con todas las opciones y el botón Proponer ruta.
 
 ### Task flows
 
 **Participar en un grupo**
 
-Task flow participar en un grupo : docs/diagramas/taskflow-grupo.png
+![Task flow participar en un grupo](docs/diagramas/taskflow-grupo.png)
 
 **Proponer una ruta**
 
-Task flow proponer una ruta : docs/diagramas/taskflow-proponer.png
+![Task flow proponer una ruta](docs/diagramas/taskflow-proponer.png)
 
 **Consultar una ruta**
 
-Task flow consultar una ruta : docs/diagramas/taskflow-consultar.png
+![Task flow consultar una ruta](docs/diagramas/taskflow-consultar.png)
 
 
 ## Capturas
@@ -255,9 +258,10 @@ Task flow consultar una ruta : docs/diagramas/taskflow-consultar.png
 |---|---|---|
 | Inicio de sesión | ![Login web](docs/capturas/login-web.png) | ![Login móvil](docs/capturas/login-movil.png) |
 | Registro | ![Registro web](docs/capturas/registro-web.png) | ![Registro móvil](docs/capturas/registro-movil.png) |
-| Mapa | ![Mapa web](docs/capturas/mapa-web.png) | ![Mapa móvil](docs/capturas/mapa-movil.png) |
-| Amigos | ![Amigos web](docs/capturas/amigos-web.png) | ![Amigos móvil](docs/capturas/amigos-movil.png) |
-| Configuración | ![Configuración web](docs/capturas/configuracion-web.png) | ![Configuración móvil](docs/capturas/configuracion-movil.png) |
+| Inicio | ![Inicio web](docs/capturas/inicio-web.png) | ![Inicio móvil](docs/capturas/inicio-movil.png) |
+| Explorar rutas | ![Rutas web](docs/capturas/rutas-web.png) | ![Rutas móvil](docs/capturas/rutas-movil.png) |
+| Comunidad | ![Comunidad web](docs/capturas/comunidad-web.png) | ![Comunidad móvil](docs/capturas/comunidad-movil.png) |
+| Cuenta | ![Cuenta web](docs/capturas/cuenta-web.png) | ![Cuenta móvil](docs/capturas/cuenta-movil.png) |
 
 ---
 
@@ -265,6 +269,6 @@ Task flow consultar una ruta : docs/diagramas/taskflow-consultar.png
 
 - **Mapas:** © colaboradores de [OpenStreetMap](https://www.openstreetmap.org/copyright).
 - **Íconos:** [Ionicons](https://ionic.io/ionicons).
-- **Tipografías:** [Poppins](https://fonts.google.com/specimen/Poppins) y [Rationale](https://fonts.google.com/specimen/Rationale), de Google Fonts.
-- **Fotografía de la pantalla de inicio de sesión:** _completar con el autor y la fuente de la imagen_.
+- **Tipografías:** [Roboto](https://fonts.google.com/specimen/Roboto) y [Outfit](https://fonts.google.com/specimen/Outfit), de Google Fonts.
+- **Fotografía de las portadas (`fondo_trekking_2.png`):** _completar con el autor y la fuente de la imagen_.
 - **Fuentes del problema:** [SENAPRED](https://senapred.cl/), [CONAF](https://www.conaf.cl/) y [AllTrails](https://www.alltrails.com/).
