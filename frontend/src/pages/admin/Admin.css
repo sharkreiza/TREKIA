@@ -1,0 +1,85 @@
+.admin-titulo {
+  margin: 0;
+  font-size: 28px;
+}
+
+.admin-bajada {
+  margin: 4px 0 20px;
+  color: var(--trekia-gris);
+  font-size: 14px;
+}
+
+.admin-tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #ffffff;
+  border: 1px solid var(--trekia-borde);
+  border-radius: 14px;
+}
+
+.admin-tarjeta-foto {
+  width: 76px;
+  height: 66px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: linear-gradient(140deg, #9db9a6, #2e4f3b);
+}
+
+.admin-tarjeta-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-tarjeta-nombre {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.admin-tarjeta-datos {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--trekia-gris);
+}
+
+.admin-portada {
+  height: 160px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: #2e4f3b url('/assets/fondo_trekking_2.png') center / cover no-repeat;
+}
+
+.admin-panel {
+  padding: 16px;
+  margin: 16px 0;
+  background: #ffffff;
+  border: 1px solid var(--trekia-borde);
+  border-radius: 14px;
+}
+
+.admin-panel h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.admin-dato {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.admin-dato span:first-child {
+  color: var(--trekia-gris);
+}
+
+.admin-botones {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}

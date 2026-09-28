@@ -1,0 +1,67 @@
+.tarjeta-ruta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #ffffff;
+  border: 1px solid var(--trekia-borde);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.tarjeta-ruta-foto {
+  width: 76px;
+  height: 66px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: linear-gradient(140deg, #6f8f7a, #2e4f3b);
+}
+
+.tarjeta-ruta-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tarjeta-ruta-nombre {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.tarjeta-ruta-datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--trekia-gris);
+}
+
+.etiqueta {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.etiqueta-baja {
+  background: #e3f0e6;
+  color: #2e4f3b;
+}
+
+.etiqueta-moderada {
+  background: #e6eef7;
+  color: #2f4b6e;
+}
+
+.etiqueta-alta {
+  background: #f8dedc;
+  color: #8c3b33;
+}
+
+.tarjeta-ruta-puntuacion {
+  font-size: 12px;
+  color: var(--trekia-gris);
+}

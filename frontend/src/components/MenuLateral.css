@@ -1,11 +1,34 @@
 .menu-lateral ion-content {
-  --padding-top: 16px;
+  --background: #ffffff;
+  --padding-top: 20px;
+}
+
+.menu-logo {
+  padding: 0 16px 20px;
+}
+
+.menu-logo img {
+  height: 34px;
+}
+
+.menu-lateral ion-item {
+  --background: #ffffff;
+  --color: #1a1a1a;
+  --padding-start: 16px;
+  font-size: 15px;
 }
 
 .menu-lateral ion-icon {
-  color: #4caf50;
+  color: var(--ion-color-primary);
+  font-size: 20px;
 }
 
 .menu-activo {
-  --background: #c4c4c4;
+  --background: #eaf0eb;
+  --color: var(--ion-color-primary);
+  font-weight: 600;
+}
+
+.menu-proponer {
+  margin: 16px;
 }

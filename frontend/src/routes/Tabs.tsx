@@ -1,44 +1,50 @@
 import { IonIcon, IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/react';
 import { Navigate, Route } from 'react-router-dom';
-import { mapOutline, peopleOutline, peopleCircleOutline, personOutline } from 'ionicons/icons';
+import { chatbubblesOutline, homeOutline, mapOutline, peopleOutline, personCircleOutline } from 'ionicons/icons';
 
-import Mapa from '../pages/rutas/Mapa';
+import Inicio from '../pages/inicio/Inicio';
+import ExplorarRutas from '../pages/rutas/ExplorarRutas';
 import DetalleRuta from '../pages/rutas/DetalleRuta';
 import ProponerRuta from '../pages/rutas/ProponerRuta';
 import Grupos from '../pages/grupos/Grupos';
 import CrearGrupo from '../pages/grupos/CrearGrupo';
 import DetalleGrupo from '../pages/grupos/DetalleGrupo';
-import Amigos from '../pages/amigos/Amigos';
-import Perfil from '../pages/perfil/Perfil';
-import Configuracion from '../pages/configuracion/Configuracion';
+import Comunidad from '../pages/comunidad/Comunidad';
+import Cuenta from '../pages/cuenta/Cuenta';
 import './tabs.css';
 
 export default function Tabs() {
   return (
     <IonTabs>
       <IonRouterOutlet>
-        <Route path="mapa" element={<Mapa />} />
-        <Route path="mapa/ruta/:id" element={<DetalleRuta />} />
+        <Route path="inicio" element={<Inicio />} />
+
+        <Route path="rutas" element={<ExplorarRutas />} />
+        <Route path="rutas/:id" element={<DetalleRuta />} />
 
         <Route path="grupos" element={<Grupos />} />
         <Route path="grupos/nuevo" element={<CrearGrupo />} />
         <Route path="grupos/:id" element={<DetalleGrupo />} />
 
-        <Route path="amigos" element={<Amigos />} />
+        <Route path="comunidad" element={<Comunidad />} />
 
-        <Route path="perfil" element={<Perfil />} />
-        <Route path="perfil/:userId" element={<Perfil />} />
+        <Route path="cuenta" element={<Cuenta />} />
+        <Route path="cuenta/:userId" element={<Cuenta />} />
 
         <Route path="propuesta" element={<ProponerRuta />} />
-        <Route path="configuracion" element={<Configuracion />} />
 
-        <Route index element={<Navigate to="mapa" replace />} />
+        <Route index element={<Navigate to="inicio" replace />} />
       </IonRouterOutlet>
 
       <IonTabBar slot="bottom">
-        <IonTabButton tab="mapa" href="/app/mapa">
+        <IonTabButton tab="inicio" href="/app/inicio">
+          <IonIcon icon={homeOutline} />
+          <IonLabel>Inicio</IonLabel>
+        </IonTabButton>
+
+        <IonTabButton tab="rutas" href="/app/rutas">
           <IonIcon icon={mapOutline} />
-          <IonLabel>Mapa</IonLabel>
+          <IonLabel>Rutas</IonLabel>
         </IonTabButton>
 
         <IonTabButton tab="grupos" href="/app/grupos">
@@ -46,14 +52,14 @@ export default function Tabs() {
           <IonLabel>Grupos</IonLabel>
         </IonTabButton>
 
-        <IonTabButton tab="amigos" href="/app/amigos">
-          <IonIcon icon={peopleCircleOutline} />
-          <IonLabel>Amigos</IonLabel>
+        <IonTabButton tab="comunidad" href="/app/comunidad">
+          <IonIcon icon={chatbubblesOutline} />
+          <IonLabel>Comunidad</IonLabel>
         </IonTabButton>
 
-        <IonTabButton tab="perfil" href="/app/perfil">
-          <IonIcon icon={personOutline} />
-          <IonLabel>Perfil</IonLabel>
+        <IonTabButton tab="cuenta" href="/app/cuenta">
+          <IonIcon icon={personCircleOutline} />
+          <IonLabel>Cuenta</IonLabel>
         </IonTabButton>
       </IonTabBar>
     </IonTabs>

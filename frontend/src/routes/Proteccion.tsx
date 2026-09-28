@@ -7,7 +7,7 @@ export function paginaInicio(rol: Rol) {
   if (rol === 'admin') {
     return '/admin/propuestas';
   }
-  return '/app/mapa';
+  return '/app/inicio';
 }
 
 export function RutaPrivada({ children, rol }: { children: ReactNode; rol?: Rol }) {

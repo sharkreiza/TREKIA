@@ -1,0 +1,140 @@
+.inicio-hero {
+  position: relative;
+  padding: 40px 24px;
+  border-radius: 14px;
+  background: #2e4f3b url('/assets/fondo_trekking_2.png') center / cover no-repeat;
+  color: #ffffff;
+}
+
+.inicio-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.inicio-hero > * {
+  position: relative;
+}
+
+.inicio-hero h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.inicio-hero p {
+  margin: 6px 0 18px;
+  font-size: 14px;
+}
+
+.inicio-buscador {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.inicio-buscador ion-input {
+  flex: 1;
+  min-width: 220px;
+  --background: #ffffff;
+  border-radius: 10px;
+}
+
+.inicio-columnas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.inicio-mapa {
+  height: 320px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.inicio-panel {
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid var(--trekia-borde);
+  border-radius: 14px;
+}
+
+.inicio-panel h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.inicio-titulo {
+  margin: 20px 0 10px;
+  font-size: 22px;
+}
+
+.inicio-categorias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.inicio-categoria {
+  flex: 1 1 110px;
+  padding: 16px 8px;
+  text-align: center;
+  font-size: 13px;
+  background: #ffffff;
+  border: 1px solid var(--trekia-borde);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.inicio-categoria ion-icon {
+  display: block;
+  margin: 0 auto 6px;
+  font-size: 22px;
+  color: var(--ion-color-primary);
+}
+
+.grupo-fila {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--trekia-borde);
+  cursor: pointer;
+}
+
+.grupo-fila-foto {
+  width: 68px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: linear-gradient(140deg, #9db9a6, #475f50);
+}
+
+.grupo-fila p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--trekia-gris);
+}
+
+.grupo-fila .grupo-nombre {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ion-text-color);
+  margin-bottom: 4px;
+}
+
+@media (min-width: 992px) {
+  .inicio-columnas {
+    grid-template-columns: 3fr 2fr;
+  }
+
+  .inicio-mapa {
+    height: 420px;
+  }
+}
+
+.inicio-hero .inicio-logo {
+  display: none;
+}
