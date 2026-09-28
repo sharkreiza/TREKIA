@@ -254,14 +254,14 @@ frontend/
 
 ## Capturas
 
-| Pantalla | Web | Móvil |
+| Pantalla | Web |
 |---|---|---|
-| Inicio de sesión | ![Login web](docs/capturas/login-web.png) | ![Login móvil](docs/capturas/login-movil.png) |
-| Registro | ![Registro web](docs/capturas/registro-web.png) | ![Registro móvil](docs/capturas/registro-movil.png) |
-| Inicio | ![Inicio web](docs/capturas/inicio-web.png) | ![Inicio móvil](docs/capturas/inicio-movil.png) |
-| Explorar rutas | ![Rutas web](docs/capturas/rutas-web.png) | ![Rutas móvil](docs/capturas/rutas-movil.png) |
-| Comunidad | ![Comunidad web](docs/capturas/comunidad-web.png) | ![Comunidad móvil](docs/capturas/comunidad-movil.png) |
-| Cuenta | ![Cuenta web](docs/capturas/cuenta-web.png) | ![Cuenta móvil](docs/capturas/cuenta-movil.png) |
+| Inicio de sesión | ![Login web](docs/capturas/login-web.png) | 
+| Registro | ![Registro web](docs/capturas/registro-web.png) | 
+| Inicio | ![Inicio web](docs/capturas/inicio-web.png) |
+| Explorar rutas | ![Rutas web](docs/capturas/rutas-web.png) | 
+| Comunidad | ![Comunidad web](docs/capturas/comunidad-web.png) | 
+| Cuenta | ![Cuenta web](docs/capturas/cuenta-web.png) | 
 
 ---
 
