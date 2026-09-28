@@ -1,12 +1,17 @@
-export type Dificultad = 'Fácil' | 'Media' | 'Difícil';
+export type Dificultad = 'Baja' | 'Moderada' | 'Alta';
 
 export interface Ruta {
   id: number;
   nombre: string;
   ubicacion: string;
+  region: string;
   dificultad: Dificultad;
   distancia: number;
+  desnivel: number;
   duracion: string;
+  tipo: string;
+  puntuacion: number;
+  resenas: number;
   descripcion: string;
   lat: number;
   lng: number;
@@ -15,70 +20,141 @@ export interface Ruta {
 const rutas: Ruta[] = [
   {
     id: 1,
-    nombre: 'Cerro La Campana',
-    ubicacion: 'Olmué',
-    dificultad: 'Difícil',
-    distancia: 7,
+    nombre: 'Laguna El Yeso',
+    ubicacion: 'San José de Maipo',
+    region: 'Metropolitana',
+    dificultad: 'Moderada',
+    distancia: 12,
+    desnivel: 900,
     duracion: '5 horas',
-    descripcion: 'Subida exigente con mucha pendiente y vista a la costa y la cordillera.',
+    tipo: 'Ida y vuelta',
+    puntuacion: 4.8,
+    resenas: 124,
+    descripcion: 'Recorrido junto al embalse, con vistas a la cordillera y agua turquesa.',
+    lat: -33.667,
+    lng: -70.083,
+  },
+  {
+    id: 2,
+    nombre: 'Cerro Provincia',
+    ubicacion: 'Lo Barnechea',
+    region: 'Metropolitana',
+    dificultad: 'Alta',
+    distancia: 16,
+    desnivel: 1600,
+    duracion: '8 horas',
+    tipo: 'Ida y vuelta',
+    puntuacion: 4.6,
+    resenas: 98,
+    descripcion: 'Subida exigente y muy expuesta al sol, con vista completa a Santiago.',
+    lat: -33.36,
+    lng: -70.48,
+  },
+  {
+    id: 3,
+    nombre: 'Parque La Campana',
+    ubicacion: 'Olmué',
+    region: 'Valparaíso',
+    dificultad: 'Baja',
+    distancia: 6,
+    desnivel: 400,
+    duracion: '3 horas',
+    tipo: 'Circuito',
+    puntuacion: 4.7,
+    resenas: 210,
+    descripcion: 'Sendero entre palmas chilenas, con sombra y agua en el camino.',
     lat: -32.957,
     lng: -71.129,
   },
   {
-    id: 2,
+    id: 4,
     nombre: 'Lago Peñuelas',
     ubicacion: 'Valparaíso',
-    dificultad: 'Fácil',
+    region: 'Valparaíso',
+    dificultad: 'Baja',
     distancia: 4,
+    desnivel: 150,
     duracion: '1 hora y media',
+    tipo: 'Circuito',
+    puntuacion: 4.3,
+    resenas: 64,
     descripcion: 'Sendero plano alrededor del lago, ideal para empezar.',
     lat: -33.147,
     lng: -71.544,
   },
   {
-    id: 3,
+    id: 5,
     nombre: 'Cerro Mauco',
     ubicacion: 'Concón',
-    dificultad: 'Media',
+    region: 'Valparaíso',
+    dificultad: 'Moderada',
     distancia: 6,
+    desnivel: 700,
     duracion: '3 horas',
-    descripcion: 'Subida constante con vista al río Aconcagua.',
+    tipo: 'Ida y vuelta',
+    puntuacion: 4.4,
+    resenas: 41,
+    descripcion: 'Subida constante con vista al río Aconcagua y a la costa.',
     lat: -32.87,
     lng: -71.455,
   },
-  {
-    id: 4,
-    nombre: 'Palmas de Ocoa',
-    ubicacion: 'Hijuelas',
-    dificultad: 'Media',
-    distancia: 10,
-    duracion: '4 horas',
-    descripcion: 'Recorrido entre palmas chilenas, con poca sombra en verano.',
-    lat: -32.928,
-    lng: -71.071,
-  },
-  {
-    id: 5,
-    nombre: 'Dunas de Concón',
-    ubicacion: 'Concón',
-    dificultad: 'Fácil',
-    distancia: 2,
-    duracion: '1 hora',
-    descripcion: 'Paseo corto por las dunas frente al mar.',
-    lat: -32.938,
-    lng: -71.535,
-  },
 ];
+
+export interface Filtros {
+  busqueda: string;
+  region: string;
+  dificultad: string;
+  duracion: string;
+  tipo: string;
+  orden: string;
+}
+
+export const filtrosVacios: Filtros = {
+  busqueda: '',
+  region: '',
+  dificultad: '',
+  duracion: '',
+  tipo: '',
+  orden: '',
+};
+
+export function obtenerRutas() {
+  return rutas;
+}
 
 export function obtenerRuta(id: number) {
   return rutas.find((ruta) => ruta.id === id);
 }
 
-export function filtrarRutas(dificultades: Dificultad[], ubicacion: string, distanciaMax: number) {
-  return rutas.filter((ruta) => {
-    const cumpleDificultad = dificultades.length === 0 || dificultades.includes(ruta.dificultad);
-    const cumpleUbicacion = ruta.ubicacion.toLowerCase().includes(ubicacion.toLowerCase());
-    const cumpleDistancia = ruta.distancia <= distanciaMax;
-    return cumpleDificultad && cumpleUbicacion && cumpleDistancia;
+export function rutasDestacadas() {
+  return [...rutas].sort((a, b) => b.puntuacion - a.puntuacion).slice(0, 3);
+}
+
+export function filtrarRutas(filtros: Filtros) {
+  const encontradas = rutas.filter((ruta) => {
+    const texto = `${ruta.nombre} ${ruta.ubicacion} ${ruta.region}`.toLowerCase();
+    const cumpleBusqueda = texto.includes(filtros.busqueda.toLowerCase());
+    const cumpleRegion = filtros.region === '' || ruta.region === filtros.region;
+    const cumpleDificultad = filtros.dificultad === '' || ruta.dificultad === filtros.dificultad;
+    const cumpleTipo = filtros.tipo === '' || ruta.tipo === filtros.tipo;
+
+    let cumpleDuracion = true;
+    if (filtros.duracion === 'corta') {
+      cumpleDuracion = ruta.distancia <= 6;
+    }
+    if (filtros.duracion === 'media') {
+      cumpleDuracion = ruta.distancia > 6 && ruta.distancia <= 12;
+    }
+    if (filtros.duracion === 'larga') {
+      cumpleDuracion = ruta.distancia > 12;
+    }
+
+    return cumpleBusqueda && cumpleRegion && cumpleDificultad && cumpleTipo && cumpleDuracion;
   });
+
+  if (filtros.orden === 'puntuacion') {
+    return [...encontradas].sort((a, b) => b.puntuacion - a.puntuacion);
+  }
+
+  return encontradas;
 }

@@ -1,26 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Rationale&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Outfit:wght@400;600&display=swap');
 
 :root {
-  --ion-font-family: 'Poppins', sans-serif;
+  --ion-font-family: 'Roboto', sans-serif;
 
-  --ion-color-primary: #0088ff;
-  --ion-color-primary-rgb: 0, 136, 255;
+  --ion-color-primary: #2e4f3b;
+  --ion-color-primary-rgb: 46, 79, 59;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #0078e0;
-  --ion-color-primary-tint: #1a94ff;
+  --ion-color-primary-shade: #284634;
+  --ion-color-primary-tint: #43614f;
 
-  --ion-color-secondary: #0c2a92;
-  --ion-color-secondary-rgb: 12, 42, 146;
+  --ion-color-secondary: #475f50;
+  --ion-color-secondary-rgb: 71, 95, 80;
   --ion-color-secondary-contrast: #ffffff;
   --ion-color-secondary-contrast-rgb: 255, 255, 255;
-  --ion-color-secondary-shade: #0b2580;
-  --ion-color-secondary-tint: #243f9d;
+  --ion-color-secondary-shade: #3e5446;
+  --ion-color-secondary-tint: #596f61;
 
-  --ion-background-color: #ffffff;
-  --ion-text-color: #000000;
-  --ion-border-color: #d9d9d9;
+  --ion-background-color: #f8f6f1;
+  --ion-background-color-rgb: 248, 246, 241;
+  --ion-text-color: #1a1a1a;
+  --ion-text-color-rgb: 26, 26, 26;
+  --ion-border-color: #dad8d3;
 
+  --ion-item-background: #ffffff;
+  --ion-card-background: #ffffff;
+  --ion-toolbar-background: #f8f6f1;
   --ion-tab-bar-background: #ffffff;
-  --ion-tab-bar-color-selected: #0088ff;
+  --ion-tab-bar-color-selected: #2e4f3b;
+
+  --trekia-gris: #757575;
+  --trekia-borde: #dad8d3;
+}
+
+h1, h2, h3 {
+  font-family: 'Outfit', 'Roboto', sans-serif;
 }

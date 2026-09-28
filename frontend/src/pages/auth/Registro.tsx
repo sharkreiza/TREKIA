@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import {
-  IonButton, IonCheckbox, IonContent, IonInput, IonPage, IonRouterLink,
-  IonSelect, IonSelectOption, IonSpinner, useIonToast,
+  IonButton, IonCheckbox, IonContent, IonIcon, IonInput, IonPage,
+  IonRouterLink, IonSpinner, useIonToast,
 } from '@ionic/react';
 import { useNavigate } from 'react-router-dom';
+import { arrowForward, eyeOffOutline, eyeOutline, lockClosedOutline, mailOutline, personOutline } from 'ionicons/icons';
 import { registrar } from '../../services/authService';
 import './Auth.css';
 
@@ -17,7 +18,7 @@ export default function Registro() {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const [confirmar, setConfirmar] = useState('');
-  const [region, setRegion] = useState('');
+  const [verPassword, setVerPassword] = useState(false);
   const [terminos, setTerminos] = useState(false);
   const [errores, setErrores] = useState(erroresVacios);
   const [cargando, setCargando] = useState(false);
@@ -29,10 +30,8 @@ export default function Registro() {
   function validar() {
     const nuevosErrores = { ...erroresVacios };
 
-    if (nombre === '') {
-      nuevosErrores.nombre = 'Ingresa un nombre de usuario';
-    } else if (!/^[a-zA-Z0-9_]{3,20}$/.test(nombre)) {
-      nuevosErrores.nombre = 'Usa entre 3 y 20 letras, números o guion bajo';
+    if (nombre.trim().length < 3) {
+      nuevosErrores.nombre = 'Ingresa tu nombre completo';
     }
 
     if (correo === '') {
@@ -45,7 +44,7 @@ export default function Registro() {
       nuevosErrores.password = 'La contraseña no cumple los requisitos';
     }
 
-    if (confirmar !== password || confirmar === '') {
+    if (confirmar === '' || confirmar !== password) {
       nuevosErrores.confirmar = 'Las contraseñas no coinciden';
     }
 
@@ -81,90 +80,95 @@ export default function Registro() {
     <IonPage>
       <IonContent>
         <div className="auth">
-          <div className="auth-imagen" />
+          <div className="auth-imagen">
+            <h2>Explora.<br />Conecta.<br />Disfruta.</h2>
+            <p>Descubre rutas de trekking, encuentra compañeros y comparte tus experiencias.</p>
+          </div>
 
           <div className="auth-formulario">
-            <h1 className="auth-logo">Trekia</h1>
-            <h2 className="auth-titulo">Crea tu cuenta</h2>
-            <p className="auth-nota">Todos los campos son obligatorios, salvo los que dicen opcional.</p>
+            <img className="auth-logo" src="/assets/Logo_trekia.png" alt="Trekia" />
+            <h1 className="auth-titulo">Crear cuenta</h1>
+            <p className="auth-subtitulo">Únete a la comunidad y empieza a vivir nuevas aventuras</p>
+            <p className="auth-nota">Todos los campos son obligatorios.</p>
 
             <IonInput
               className={claseError(errores.nombre)}
-              label="Nombre de usuario"
+              label="Nombre completo"
               labelPlacement="stacked"
               fill="outline"
-              placeholder="ej: camila_trek"
+              placeholder="Tu nombre completo"
               value={nombre}
               errorText={errores.nombre}
-              helperText="Así te verán los demás usuarios"
               onIonInput={(e) => setNombre(e.detail.value ?? '')}
-            />
+            >
+              <IonIcon slot="start" icon={personOutline} />
+            </IonInput>
 
             <IonInput
               className={claseError(errores.correo)}
-              label="Correo"
+              label="Correo electrónico"
               labelPlacement="stacked"
               fill="outline"
               type="email"
-              placeholder="nombre@correo.cl"
+              placeholder="tu.correo@ejemplo.com"
               value={correo}
               errorText={errores.correo}
               onIonInput={(e) => setCorreo(e.detail.value ?? '')}
-            />
+            >
+              <IonIcon slot="start" icon={mailOutline} />
+            </IonInput>
 
             <IonInput
               className={claseError(errores.password)}
               label="Contraseña"
               labelPlacement="stacked"
               fill="outline"
-              type="password"
+              type={verPassword ? 'text' : 'password'}
+              placeholder="Crea una contraseña"
               value={password}
               errorText={errores.password}
               onIonInput={(e) => setPassword(e.detail.value ?? '')}
-            />
+            >
+              <IonIcon slot="start" icon={lockClosedOutline} />
+              <IonIcon
+                slot="end"
+                icon={verPassword ? eyeOffOutline : eyeOutline}
+                onClick={() => setVerPassword(!verPassword)}
+              />
+            </IonInput>
+
             <ul className="auth-reglas">
-              <li className={tieneLargo ? 'cumple' : ''}>{tieneLargo ? '✓' : '•'} Mínimo 8 caracteres</li>
-              <li className={tieneMayuscula ? 'cumple' : ''}>{tieneMayuscula ? '✓' : '•'} Al menos una mayúscula</li>
-              <li className={tieneNumero ? 'cumple' : ''}>{tieneNumero ? '✓' : '•'} Al menos un número</li>
+              <li className={tieneLargo ? 'cumple' : ''}>Mínimo 8 caracteres</li>
+              <li className={tieneMayuscula ? 'cumple' : ''}>Al menos una mayúscula</li>
+              <li className={tieneNumero ? 'cumple' : ''}>Al menos un número</li>
             </ul>
 
             <IonInput
               className={claseError(errores.confirmar)}
-              label="Confirmar contraseña"
+              label="Confirma contraseña"
               labelPlacement="stacked"
               fill="outline"
-              type="password"
+              type={verPassword ? 'text' : 'password'}
+              placeholder="Confirma tu contraseña"
               value={confirmar}
               errorText={errores.confirmar}
               onIonInput={(e) => setConfirmar(e.detail.value ?? '')}
-            />
-
-            <IonSelect
-              className="auth-campo"
-              label="Región (opcional)"
-              labelPlacement="stacked"
-              fill="outline"
-              placeholder="Selecciona tu región"
-              value={region}
-              onIonChange={(e) => setRegion(e.detail.value)}
             >
-              <IonSelectOption value="Valparaíso">Valparaíso</IonSelectOption>
-              <IonSelectOption value="Metropolitana">Metropolitana</IonSelectOption>
-              <IonSelectOption value="O'Higgins">O'Higgins</IonSelectOption>
-              <IonSelectOption value="Otra">Otra</IonSelectOption>
-            </IonSelect>
+              <IonIcon slot="start" icon={lockClosedOutline} />
+            </IonInput>
 
             <IonCheckbox labelPlacement="end" checked={terminos} onIonChange={(e) => setTerminos(e.detail.checked)}>
-              Acepto los términos y condiciones
+              Acepto los términos y condiciones y la política de privacidad
             </IonCheckbox>
             {errores.terminos && <p className="auth-error">{errores.terminos}</p>}
 
-            <IonButton expand="block" className="ion-margin-top" onClick={crearCuenta} disabled={cargando}>
+            <IonButton className="ion-margin-top" expand="block" onClick={crearCuenta} disabled={cargando}>
               {cargando ? <IonSpinner name="crescent" /> : 'Crear cuenta'}
+              {!cargando && <IonIcon slot="end" icon={arrowForward} />}
             </IonButton>
 
             <p className="auth-pie">
-              ¿Ya tienes cuenta? <IonRouterLink routerLink="/login">Inicia sesión</IonRouterLink>
+              ¿Ya tienes una cuenta? <IonRouterLink routerLink="/login">Iniciar sesión</IonRouterLink>
             </p>
           </div>
         </div>

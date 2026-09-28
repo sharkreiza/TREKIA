@@ -1,0 +1,111 @@
+.comunidad-hero {
+  position: relative;
+  padding: 36px 24px;
+  border-radius: 14px;
+  background: #2e4f3b url('/assets/fondo_trekking_2.png') center / cover no-repeat;
+  color: #ffffff;
+}
+
+.comunidad-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.comunidad-hero > * {
+  position: relative;
+}
+
+.comunidad-hero h1 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.comunidad-hero p {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+
+.comunidad-columnas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.publicacion {
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  background: #ffffff;
+  border: 1px solid var(--trekia-borde);
+  border-radius: 14px;
+}
+
+.publicacion-autor {
+  margin: 0;
+  font-weight: 600;
+}
+
+.publicacion-cuando {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--trekia-gris);
+}
+
+.publicacion-datos {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--trekia-gris);
+}
+
+.comunidad-panel {
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background: #ffffff;
+  border: 1px solid var(--trekia-borde);
+  border-radius: 14px;
+}
+
+.comunidad-panel h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.comunidad-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--trekia-borde);
+}
+
+.comunidad-fila-info {
+  flex: 1;
+}
+
+.comunidad-fila-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--trekia-gris);
+}
+
+.comunidad-fila-info .nombre {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ion-text-color);
+}
+
+.evento-fecha {
+  width: 46px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--ion-color-primary);
+}
+
+@media (min-width: 992px) {
+  .comunidad-columnas {
+    grid-template-columns: 3fr 2fr;
+  }
+}
