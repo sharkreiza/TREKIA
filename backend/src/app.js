@@ -1,18 +1,24 @@
-// Configuración de Express
 const express = require('express');
+const helmet = require('helmet');
 const cors = require('cors');
-const config = require('./config/env');
+const corsOptions = require('./config/cors');
 const routes = require('./routes');
-const { noEncontrado, manejarErrores } = require('./middlewares/errores');
+const { notFound, errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
 
-app.use(cors({ origin: config.corsOrigin })); // solo el frontend puede llamar a la API
-app.use(express.json());                      // permite leer JSON en el body
+app.disable('x-powered-by');
+// Si la API queda detrás de un proxy (nginx, Render, etc.) descomentar para
+// que el rate limit use la IP real del cliente:
+// app.set('trust proxy', 1);
+
+app.use(helmet());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10kb' }));
 
 app.use('/api', routes);
 
-app.use(noEncontrado);
-app.use(manejarErrores);
+app.use(notFound);
+app.use(errorHandler);
 
 module.exports = app;
