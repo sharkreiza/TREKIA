@@ -1,19 +1,28 @@
 {
   "name": "trekia-backend",
-  "version": "0.1.0",
-  "description": "API REST de Trekia (Node.js + Express)",
+  "version": "1.0.0",
+  "description": "API REST de Trekia (Express + PostgreSQL)",
   "main": "src/server.js",
   "private": true,
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "nodemon src/server.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=18"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }
