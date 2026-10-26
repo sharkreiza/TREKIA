@@ -1,3 +1,6 @@
+import { eliminar, enviar, obtener } from './api';
+import { capitalizar, textoDuracion } from '../utils/formatos';
+
 export type Dificultad = 'Baja' | 'Moderada' | 'Alta';
 
 export interface Ruta {
@@ -5,100 +8,80 @@ export interface Ruta {
   nombre: string;
   ubicacion: string;
   region: string;
+  comuna: string;
   dificultad: Dificultad;
-  distancia: number;
-  desnivel: number;
+  distancia: number | null;
+  desnivel: number | null;
   duracion: string;
   tipo: string;
-  puntuacion: number;
-  resenas: number;
   descripcion: string;
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
 }
 
-const rutas: Ruta[] = [
-  {
-    id: 1,
-    nombre: 'Laguna El Yeso',
-    ubicacion: 'San José de Maipo',
-    region: 'Metropolitana',
-    dificultad: 'Moderada',
-    distancia: 12,
-    desnivel: 900,
-    duracion: '5 horas',
-    tipo: 'Ida y vuelta',
-    puntuacion: 4.8,
-    resenas: 124,
-    descripcion: 'Recorrido junto al embalse, con vistas a la cordillera y agua turquesa.',
-    lat: -33.667,
-    lng: -70.083,
-  },
-  {
-    id: 2,
-    nombre: 'Cerro Provincia',
-    ubicacion: 'Lo Barnechea',
-    region: 'Metropolitana',
-    dificultad: 'Alta',
-    distancia: 16,
-    desnivel: 1600,
-    duracion: '8 horas',
-    tipo: 'Ida y vuelta',
-    puntuacion: 4.6,
-    resenas: 98,
-    descripcion: 'Subida exigente y muy expuesta al sol, con vista completa a Santiago.',
-    lat: -33.36,
-    lng: -70.48,
-  },
-  {
-    id: 3,
-    nombre: 'Parque La Campana',
-    ubicacion: 'Olmué',
-    region: 'Valparaíso',
-    dificultad: 'Baja',
-    distancia: 6,
-    desnivel: 400,
-    duracion: '3 horas',
-    tipo: 'Circuito',
-    puntuacion: 4.7,
-    resenas: 210,
-    descripcion: 'Sendero entre palmas chilenas, con sombra y agua en el camino.',
-    lat: -32.957,
-    lng: -71.129,
-  },
-  {
-    id: 4,
-    nombre: 'Lago Peñuelas',
-    ubicacion: 'Valparaíso',
-    region: 'Valparaíso',
-    dificultad: 'Baja',
-    distancia: 4,
-    desnivel: 150,
-    duracion: '1 hora y media',
-    tipo: 'Circuito',
-    puntuacion: 4.3,
-    resenas: 64,
-    descripcion: 'Sendero plano alrededor del lago, ideal para empezar.',
-    lat: -33.147,
-    lng: -71.544,
-  },
-  {
-    id: 5,
-    nombre: 'Cerro Mauco',
-    ubicacion: 'Concón',
-    region: 'Valparaíso',
-    dificultad: 'Moderada',
-    distancia: 6,
-    desnivel: 700,
-    duracion: '3 horas',
-    tipo: 'Ida y vuelta',
-    puntuacion: 4.4,
-    resenas: 41,
-    descripcion: 'Subida constante con vista al río Aconcagua y a la costa.',
-    lat: -32.87,
-    lng: -71.455,
-  },
-];
+interface RutaApi {
+  id_ruta: number;
+  nombre: string;
+  descripcion: string;
+  region: string;
+  comuna: string;
+  latitud: number | null;
+  longitud: number | null;
+  dificultad: string;
+  distancia_km: number | null;
+  desnivel_positivo_m: number | null;
+  duracion_minutos: number | null;
+  tipo_recorrido: string;
+}
+
+export interface Comentario {
+  id: number;
+  usuarioId: number;
+  autor: string;
+  contenido: string;
+  fecha: string;
+}
+
+interface ComentarioApi {
+  id_comentario: number;
+  usuario_id: number;
+  autor: string;
+  contenido: string;
+  fecha_creacion: string;
+}
+
+export const tiposRecorrido: Record<string, string> = {
+  ida_vuelta: 'Ida y vuelta',
+  solo_ida: 'Solo ida',
+};
+
+function convertirRuta(r: RutaApi): Ruta {
+  return {
+    id: r.id_ruta,
+    nombre: r.nombre,
+    ubicacion: `${r.comuna}, ${r.region}`,
+    region: r.region,
+    comuna: r.comuna,
+    dificultad: capitalizar(r.dificultad) as Dificultad,
+    distancia: r.distancia_km,
+    desnivel: r.desnivel_positivo_m,
+    duracion: textoDuracion(r.duracion_minutos),
+    tipo: tiposRecorrido[r.tipo_recorrido] ?? r.tipo_recorrido,
+    descripcion: r.descripcion,
+    lat: r.latitud,
+    lng: r.longitud,
+  };
+}
+
+function convertirComentario(c: ComentarioApi): Comentario {
+  return {
+    id: c.id_comentario,
+    usuarioId: c.usuario_id,
+    autor: c.autor,
+    contenido: c.contenido,
+    fecha: c.fecha_creacion,
+  };
+}
 
 export interface Filtros {
   busqueda: string;
@@ -118,43 +101,53 @@ export const filtrosVacios: Filtros = {
   orden: '',
 };
 
-export function obtenerRutas() {
-  return rutas;
+const rangosDistancia: Record<string, object> = {
+  corta: { distanciaMax: 6 },
+  media: { distanciaMin: 6, distanciaMax: 12 },
+  larga: { distanciaMin: 12.01 },
+};
+
+const ordenes: Record<string, object> = {
+  distancia: { orden: 'distancia', direccion: 'asc' },
+  recientes: { orden: 'fecha', direccion: 'desc' },
+};
+
+function parametros(filtros: Filtros) {
+  const tipo = Object.keys(tiposRecorrido).find((clave) => tiposRecorrido[clave] === filtros.tipo);
+
+  return {
+    limite: 100,
+    busqueda: filtros.busqueda.trim() || undefined,
+    region: filtros.region || undefined,
+    dificultad: filtros.dificultad.toLowerCase() || undefined,
+    tipoRecorrido: tipo,
+    ...rangosDistancia[filtros.duracion],
+    ...ordenes[filtros.orden],
+  };
 }
 
-export function obtenerRuta(id: number) {
-  return rutas.find((ruta) => ruta.id === id);
+export async function obtenerRutas(filtros: Filtros = filtrosVacios) {
+  const rutas = await obtener<RutaApi[]>('/rutas', parametros(filtros));
+  return rutas.map(convertirRuta);
 }
 
-export function rutasDestacadas() {
-  return [...rutas].sort((a, b) => b.puntuacion - a.puntuacion).slice(0, 3);
+export async function obtenerRuta(id: number) {
+  return convertirRuta(await obtener<RutaApi>(`/rutas/${id}`));
 }
 
-export function filtrarRutas(filtros: Filtros) {
-  const encontradas = rutas.filter((ruta) => {
-    const texto = `${ruta.nombre} ${ruta.ubicacion} ${ruta.region}`.toLowerCase();
-    const cumpleBusqueda = texto.includes(filtros.busqueda.toLowerCase());
-    const cumpleRegion = filtros.region === '' || ruta.region === filtros.region;
-    const cumpleDificultad = filtros.dificultad === '' || ruta.dificultad === filtros.dificultad;
-    const cumpleTipo = filtros.tipo === '' || ruta.tipo === filtros.tipo;
+export async function rutasRecientes() {
+  return (await obtenerRutas({ ...filtrosVacios, orden: 'recientes' })).slice(0, 3);
+}
 
-    let cumpleDuracion = true;
-    if (filtros.duracion === 'corta') {
-      cumpleDuracion = ruta.distancia <= 6;
-    }
-    if (filtros.duracion === 'media') {
-      cumpleDuracion = ruta.distancia > 6 && ruta.distancia <= 12;
-    }
-    if (filtros.duracion === 'larga') {
-      cumpleDuracion = ruta.distancia > 12;
-    }
+export async function obtenerComentarios(rutaId: number) {
+  const comentarios = await obtener<ComentarioApi[]>(`/rutas/${rutaId}/comentarios`);
+  return comentarios.map(convertirComentario);
+}
 
-    return cumpleBusqueda && cumpleRegion && cumpleDificultad && cumpleTipo && cumpleDuracion;
-  });
+export async function comentar(rutaId: number, contenido: string) {
+  return convertirComentario(await enviar<ComentarioApi>(`/rutas/${rutaId}/comentarios`, { contenido }));
+}
 
-  if (filtros.orden === 'puntuacion') {
-    return [...encontradas].sort((a, b) => b.puntuacion - a.puntuacion);
-  }
-
-  return encontradas;
+export async function eliminarComentario(id: number) {
+  await eliminar(`/comentarios/${id}`);
 }

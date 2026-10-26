@@ -64,7 +64,7 @@ export default function MenuLateral() {
           </IonButton>
         </IonMenuToggle>
 
-        {user?.rol === 'admin' && (
+        {user?.rol === 'administrador' && (
           <IonList>
             <IonListHeader>Administración</IonListHeader>
             {opcionesAdmin.map((o) => opcion(o.titulo, o.url, o.icono))}

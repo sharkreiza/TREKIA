@@ -2,27 +2,48 @@ import { useState } from 'react';
 import { IonButton, IonContent, IonInput, IonPage, IonSelect, IonSelectOption, IonTextarea, useIonToast } from '@ionic/react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
+import { useDatos } from '../../hooks/useDatos';
 import { obtenerRutas } from '../../services/rutasService';
+import { crearGrupo } from '../../services/gruposService';
+import { ErrorApi } from '../../services/api';
 
 export default function CrearGrupo() {
   const navigate = useNavigate();
   const [mostrarToast] = useIonToast();
+  const rutas = useDatos(() => obtenerRutas(), []);
 
-  const [ruta, setRuta] = useState('');
+  const [ruta, setRuta] = useState<number | null>(null);
   const [fecha, setFecha] = useState('');
   const [cupos, setCupos] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [error, setError] = useState('');
+  const [enviando, setEnviando] = useState(false);
 
-  function crear() {
-    if (ruta === '' || fecha === '' || cupos === '') {
+  async function crear() {
+    if (ruta === null || fecha === '' || cupos === '') {
       setError('Completa la ruta, la fecha y la cantidad de participantes.');
       return;
     }
 
+    const nombreRuta = rutas.datos.find((r) => r.id === ruta)?.nombre ?? '';
+
     setError('');
-    mostrarToast({ message: 'Tu grupo quedó publicado', duration: 2000, color: 'success' });
-    navigate('/app/grupos', { replace: true });
+    setEnviando(true);
+    try {
+      const grupo = await crearGrupo({
+        rutaId: ruta,
+        nombre: `Salida a ${nombreRuta}`,
+        fechaSalida: fecha,
+        cupoMaximo: Number(cupos),
+        descripcion,
+      });
+      mostrarToast({ message: 'Tu grupo quedó publicado', duration: 2000, color: 'success' });
+      navigate(`/app/grupos/${grupo.id}`, { replace: true });
+    } catch (e) {
+      const campos = e instanceof ErrorApi ? Object.values(e.campos) : [];
+      setError(campos.length > 0 ? campos.join('. ') : (e as Error).message);
+    }
+    setEnviando(false);
   }
 
   return (
@@ -34,12 +55,12 @@ export default function CrearGrupo() {
           label="Ruta"
           labelPlacement="stacked"
           fill="outline"
-          placeholder="Selecciona una ruta"
+          placeholder={rutas.cargando ? 'Cargando rutas...' : 'Selecciona una ruta'}
           value={ruta}
           onIonChange={(e) => setRuta(e.detail.value)}
         >
-          {obtenerRutas().map((r) => (
-            <IonSelectOption key={r.id} value={r.nombre}>{r.nombre}</IonSelectOption>
+          {rutas.datos.map((r) => (
+            <IonSelectOption key={r.id} value={r.id}>{r.nombre}</IonSelectOption>
           ))}
         </IonSelect>
 
@@ -74,9 +95,9 @@ export default function CrearGrupo() {
           onIonInput={(e) => setDescripcion(e.detail.value ?? '')}
         />
 
-        {error && <p className="auth-error">{error}</p>}
+        {(error || rutas.error) && <p className="auth-error">{error || rutas.error}</p>}
 
-        <IonButton className="ion-margin-top" onClick={crear}>Publicar grupo</IonButton>
+        <IonButton className="ion-margin-top" onClick={crear} disabled={enviando}>Publicar grupo</IonButton>
       </IonContent>
     </IonPage>
   );

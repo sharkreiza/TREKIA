@@ -1,72 +1,80 @@
+import { eliminar, enviar, modificar, obtener } from './api';
+import { haceCuanto } from '../utils/formatos';
+
 export interface Publicacion {
   id: number;
+  usuarioId: number;
   autor: string;
   cuando: string;
   texto: string;
-  likes: number;
-  comentarios: number;
 }
 
-export interface GrupoDestacado {
+export interface SolicitudAmistad {
+  id: number;
+  usuarioId: number;
+  nombre: string;
+  cuando: string;
+}
+
+export interface Amigo {
+  idAmistad: number;
   id: number;
   nombre: string;
-  miembros: string;
+  ubicacion: string | null;
 }
 
-export interface Evento {
-  id: number;
-  dia: string;
-  mes: string;
-  nombre: string;
-  participantes: number;
+interface PublicacionApi {
+  id_publicacion: number;
+  usuario_id: number;
+  autor: string;
+  contenido: string;
+  fecha_creacion: string;
 }
 
-export interface Solicitud {
-  id: number;
-  nombre: string;
-  detalle: string;
+function convertirPublicacion(p: PublicacionApi): Publicacion {
+  return {
+    id: p.id_publicacion,
+    usuarioId: p.usuario_id,
+    autor: p.autor,
+    cuando: haceCuanto(p.fecha_creacion),
+    texto: p.contenido,
+  };
 }
 
-export function obtenerPublicaciones(): Publicacion[] {
-  return [
-    {
-      id: 1,
-      autor: 'Sofía Torres',
-      cuando: 'hace 2 días',
-      texto: '¡Increíbles vistas en el Cerro Provincia! La vista en la cumbre vale totalmente el esfuerzo. Si alguien quiere sumarse a la próxima, avisen.',
-      likes: 28,
-      comentarios: 5,
-    },
-    {
-      id: 2,
-      autor: 'Matías Rojas',
-      cuando: 'hace 4 días',
-      texto: '¿Alguien tiene recomendaciones de chaquetas impermeables para trekking en la zona central? Busco algo liviano que aguante bien la lluvia.',
-      likes: 12,
-      comentarios: 18,
-    },
-  ];
+export async function obtenerPublicaciones() {
+  const publicaciones = await obtener<PublicacionApi[]>('/publicaciones');
+  return publicaciones.map(convertirPublicacion);
 }
 
-export function obtenerGruposDestacados(): GrupoDestacado[] {
-  return [
-    { id: 1, nombre: 'Trekking región de Valparaíso', miembros: '1,2k miembros' },
-    { id: 2, nombre: 'Amantes de la montaña', miembros: '800 miembros' },
-    { id: 3, nombre: 'Fotografías de la naturaleza', miembros: '630 miembros' },
-  ];
+export async function publicar(texto: string) {
+  return convertirPublicacion(await enviar<PublicacionApi>('/publicaciones', { contenido: texto }));
 }
 
-export function obtenerEventos(): Evento[] {
-  return [
-    { id: 1, dia: '16', mes: 'Nov', nombre: 'Ruta a Laguna El Yeso', participantes: 12 },
-    { id: 2, dia: '23', mes: 'Nov', nombre: 'Trekking Cerro La Campana', participantes: 8 },
-    { id: 3, dia: '30', mes: 'Nov', nombre: 'Salida fotográfica Cajón del Maipo', participantes: 15 },
-  ];
+export async function eliminarPublicacion(id: number) {
+  await eliminar(`/publicaciones/${id}`);
 }
 
-export function obtenerSolicitudes(): Solicitud[] {
-  return [
-    { id: 3, nombre: 'sandra_cano', detalle: '10 amigos en común' },
-    { id: 4, nombre: 'antonia_trekia', detalle: '1 amigo en común' },
-  ];
+export async function obtenerSolicitudesAmistad() {
+  const solicitudes = await obtener<{ id_amistad: number; solicitante_id: number; solicitante: string; fecha_solicitud: string }[]>(
+    '/amistades/solicitudes',
+  );
+  return solicitudes.map<SolicitudAmistad>((s) => ({
+    id: s.id_amistad,
+    usuarioId: s.solicitante_id,
+    nombre: s.solicitante,
+    cuando: haceCuanto(s.fecha_solicitud),
+  }));
+}
+
+export async function responderSolicitudAmistad(id: number, acepta: boolean) {
+  await modificar(`/amistades/${id}`, { estado: acepta ? 'aceptada' : 'rechazada' });
+}
+
+export async function obtenerAmigos() {
+  const amigos = await obtener<{ id_amistad: number; id_usuario: number; nombre: string; ubicacion: string | null }[]>('/amistades');
+  return amigos.map<Amigo>((a) => ({ idAmistad: a.id_amistad, id: a.id_usuario, nombre: a.nombre, ubicacion: a.ubicacion }));
+}
+
+export async function enviarSolicitudAmistad(usuarioId: number) {
+  await enviar('/amistades', { usuarioId });
 }

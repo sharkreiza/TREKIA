@@ -1,36 +1,59 @@
-export type Rol = 'usuario' | 'admin';
+import { enviar, modificar, obtener } from './api';
+
+export type Rol = 'usuario' | 'administrador';
 
 export interface Usuario {
   id: number;
   nombre: string;
   correo: string;
   rol: Rol;
+  ubicacion: string | null;
+  biografia: string | null;
 }
 
-const usuarios = [
-  { id: 1, nombre: 'usuario_trekia', correo: 'usuario@gmail.com', password: 'Trekia123', rol: 'usuario' as Rol },
-  { id: 2, nombre: 'admin_trekia', correo: 'admin@gmail.com', password: 'Admin123', rol: 'admin' as Rol },
-];
+interface UsuarioApi {
+  id_usuario: number;
+  nombre: string;
+  correo: string;
+  rol: Rol;
+  ubicacion: string | null;
+  biografia: string | null;
+}
 
-export async function login(correo: string, password: string): Promise<Usuario> {
-  const encontrado = usuarios.find((u) => u.correo === correo && u.password === password);
+interface SesionApi {
+  token: string;
+  usuario: UsuarioApi;
+}
 
-  if (!encontrado) {
-    throw new Error('Correo o contraseña incorrectos');
-  }
-
+function convertirUsuario(u: UsuarioApi): Usuario {
   return {
-    id: encontrado.id,
-    nombre: encontrado.nombre,
-    correo: encontrado.correo,
-    rol: encontrado.rol,
+    id: u.id_usuario,
+    nombre: u.nombre,
+    correo: u.correo,
+    rol: u.rol,
+    ubicacion: u.ubicacion,
+    biografia: u.biografia,
   };
 }
 
-export async function registrar(nombre: string, correo: string, password: string) {
-  if (usuarios.some((u) => u.correo === correo)) {
-    throw new Error('Este correo ya está registrado');
-  }
+export async function login(correo: string, password: string) {
+  const sesion = await enviar<SesionApi>('/auth/login', { correo, password });
+  return { token: sesion.token, usuario: convertirUsuario(sesion.usuario) };
+}
 
-  usuarios.push({ id: usuarios.length + 1, nombre, correo, password, rol: 'usuario' });
+export async function registrar(nombre: string, correo: string, password: string) {
+  const sesion = await enviar<SesionApi>('/auth/register', { nombre, correo, password });
+  return { token: sesion.token, usuario: convertirUsuario(sesion.usuario) };
+}
+
+export async function obtenerSesion() {
+  return convertirUsuario(await obtener<UsuarioApi>('/auth/me'));
+}
+
+export async function obtenerUsuario(id: number) {
+  return convertirUsuario(await obtener<UsuarioApi>(`/usuarios/${id}`));
+}
+
+export async function actualizarPerfil(cambios: { nombre?: string; ubicacion?: string; biografia?: string }) {
+  return convertirUsuario(await modificar<UsuarioApi>('/usuarios/me', cambios));
 }

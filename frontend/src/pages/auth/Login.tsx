@@ -42,8 +42,8 @@ export default function Login() {
     try {
       const usuario = await login(correo, password, true);
       navigate(paginaInicio(usuario.rol), { replace: true });
-    } catch {
-      setErrorGeneral('Correo o contraseña incorrectos');
+    } catch (error) {
+      setErrorGeneral((error as Error).message);
     }
     setCargando(false);
   }

@@ -5,6 +5,8 @@ import {
 } from '@ionic/react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
+import { crearPropuesta } from '../../services/propuestasService';
+import { ErrorApi } from '../../services/api';
 import './ProponerRuta.css';
 
 export default function ProponerRuta() {
@@ -18,23 +20,41 @@ export default function ProponerRuta() {
   const [comuna, setComuna] = useState('');
   const [distancia, setDistancia] = useState('');
   const [duracion, setDuracion] = useState('');
-  const [tipo, setTipo] = useState('');
+  const [tipo, setTipo] = useState('ida_vuelta');
   const [dificultad, setDificultad] = useState('');
   const [error, setError] = useState('');
+  const [enviando, setEnviando] = useState(false);
 
-  function publicar() {
-    if (nombre === '' || descripcion === '' || region === '' || distancia === '' || dificultad === '') {
-      setError('Completa el nombre, la descripción, la región, la distancia y la dificultad.');
+  async function publicar() {
+    if (nombre === '' || descripcion === '' || region === '' || comuna === '' || dificultad === '') {
+      setError('Completa el nombre, la descripción, la región, la comuna y la dificultad.');
       return;
     }
 
     setError('');
-    mostrarToast({
-      message: 'Tu ruta quedó en revisión, te avisaremos cuando la aprueben',
-      duration: 2500,
-      color: 'success',
-    });
-    navigate('/app/inicio', { replace: true });
+    setEnviando(true);
+    try {
+      await crearPropuesta({
+        nombre,
+        descripcion,
+        region,
+        comuna,
+        dificultad: dificultad.toLowerCase(),
+        tipoRecorrido: tipo,
+        distancia: distancia ? Number(distancia) : undefined,
+        duracion: duracion ? Math.round(Number(duracion) * 60) : undefined,
+      });
+      mostrarToast({
+        message: 'Tu ruta quedó en revisión, te avisaremos cuando la aprueben',
+        duration: 2500,
+        color: 'success',
+      });
+      navigate('/app/inicio', { replace: true });
+    } catch (e) {
+      const campos = e instanceof ErrorApi ? Object.values(e.campos) : [];
+      setError(campos.length > 0 ? campos.join('. ') : (e as Error).message);
+    }
+    setEnviando(false);
   }
 
   return (
@@ -119,10 +139,11 @@ export default function ProponerRuta() {
                   onIonInput={(e) => setDistancia(e.detail.value ?? '')}
                 />
                 <IonInput
-                  label="Duración"
+                  label="Duración (horas)"
                   labelPlacement="stacked"
                   fill="outline"
-                  placeholder="Ej: 4 horas"
+                  type="number"
+                  placeholder="Ej: 4"
                   value={duracion}
                   onIonInput={(e) => setDuracion(e.detail.value ?? '')}
                 />
@@ -130,11 +151,9 @@ export default function ProponerRuta() {
 
               <p>Tipo de ruta</p>
               <IonRadioGroup value={tipo} onIonChange={(e) => setTipo(e.detail.value)}>
-                <IonRadio value="Ida y vuelta">Ida y vuelta</IonRadio>
+                <IonRadio value="ida_vuelta">Ida y vuelta</IonRadio>
                 <br />
-                <IonRadio value="Circuito">Circuito</IonRadio>
-                <br />
-                <IonRadio value="Solo ida">Solo ida</IonRadio>
+                <IonRadio value="solo_ida">Solo ida</IonRadio>
               </IonRadioGroup>
 
               <IonSelect
@@ -159,15 +178,14 @@ export default function ProponerRuta() {
               <ul>
                 <li>Revisa que toda la información sea correcta.</li>
                 <li>Asegúrate de tener permiso para compartir la ruta.</li>
-                <li>Incluye fotos reales de la ruta.</li>
+                <li>Un administrador revisará la ruta antes de publicarla.</li>
               </ul>
             </div>
 
             {error && <p className="auth-error">{error}</p>}
 
             <div className="propuesta-botones">
-              <IonButton fill="outline">Guardar borrador</IonButton>
-              <IonButton onClick={publicar}>Publicar ruta</IonButton>
+              <IonButton onClick={publicar} disabled={enviando}>Enviar a revisión</IonButton>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   IonButton, IonContent, IonHeader, IonIcon, IonInput, IonModal, IonPage,
   IonSelect, IonSelectOption, IonTitle, IonToolbar,
@@ -7,7 +7,9 @@ import { useSearchParams } from 'react-router-dom';
 import { funnelOutline, refreshOutline, searchOutline } from 'ionicons/icons';
 import AppHeader from '../../components/AppHeader';
 import TarjetaRuta from '../../components/TarjetaRuta';
-import { Filtros, filtrarRutas, filtrosVacios } from '../../services/rutasService';
+import Estado from '../../components/Estado';
+import { useDatos } from '../../hooks/useDatos';
+import { Filtros, filtrosVacios, obtenerRutas } from '../../services/rutasService';
 import './ExplorarRutas.css';
 
 export default function ExplorarRutas() {
@@ -19,10 +21,20 @@ export default function ExplorarRutas() {
     dificultad: parametros.get('dificultad') ?? '',
     orden: parametros.get('orden') ?? '',
   });
+  const [busqueda, setBusqueda] = useState(filtros.busqueda);
   const [borrador, setBorrador] = useState<Filtros>(filtros);
   const [abierto, setAbierto] = useState(false);
 
-  const rutas = filtrarRutas(filtros);
+  const rutas = useDatos(() => obtenerRutas(filtros), [], [filtros]);
+
+  useEffect(() => {
+    const espera = setTimeout(() => {
+      if (busqueda !== filtros.busqueda) {
+        setFiltros({ ...filtros, busqueda });
+      }
+    }, 400);
+    return () => clearTimeout(espera);
+  }, [busqueda]);
 
   function abrirFiltros() {
     setBorrador(filtros);
@@ -30,12 +42,12 @@ export default function ExplorarRutas() {
   }
 
   function aplicarFiltros() {
-    setFiltros(borrador);
+    setFiltros({ ...borrador, busqueda });
     setAbierto(false);
   }
 
   function limpiarFiltros() {
-    setBorrador({ ...filtrosVacios, busqueda: borrador.busqueda });
+    setBorrador({ ...filtrosVacios, busqueda });
   }
 
   return (
@@ -46,8 +58,8 @@ export default function ExplorarRutas() {
           <IonInput
             fill="solid"
             placeholder="Busca ubicaciones, rutas o palabras clave"
-            value={filtros.busqueda}
-            onIonInput={(e) => setFiltros({ ...filtros, busqueda: e.detail.value ?? '' })}
+            value={busqueda}
+            onIonInput={(e) => setBusqueda(e.detail.value ?? '')}
           >
             <IonIcon slot="start" icon={searchOutline} />
           </IonInput>
@@ -57,8 +69,11 @@ export default function ExplorarRutas() {
           </IonButton>
         </div>
 
-        {rutas.length === 0 && <p className="rutas-vacio">No encontramos rutas con esos filtros.</p>}
-        {rutas.map((ruta) => (
+        <Estado cargando={rutas.cargando} error={rutas.error} reintentar={rutas.recargar} />
+        {!rutas.cargando && !rutas.error && rutas.datos.length === 0 && (
+          <p className="rutas-vacio">No encontramos rutas con esos filtros.</p>
+        )}
+        {!rutas.cargando && rutas.datos.map((ruta) => (
           <TarjetaRuta key={ruta.id} ruta={ruta} />
         ))}
 
@@ -123,7 +138,21 @@ export default function ExplorarRutas() {
             >
               <IonSelectOption value="">Todas</IonSelectOption>
               <IonSelectOption value="Ida y vuelta">Ida y vuelta</IonSelectOption>
-              <IonSelectOption value="Circuito">Circuito</IonSelectOption>
+              <IonSelectOption value="Solo ida">Solo ida</IonSelectOption>
+            </IonSelect>
+
+            <IonSelect
+              className="ion-margin-top"
+              label="Ordenar por"
+              labelPlacement="stacked"
+              fill="outline"
+              placeholder="Sin orden"
+              value={borrador.orden}
+              onIonChange={(e) => setBorrador({ ...borrador, orden: e.detail.value })}
+            >
+              <IonSelectOption value="">Sin orden</IonSelectOption>
+              <IonSelectOption value="distancia">Menor distancia</IonSelectOption>
+              <IonSelectOption value="recientes">Más recientes</IonSelectOption>
             </IonSelect>
 
             <div className="filtros-acciones">

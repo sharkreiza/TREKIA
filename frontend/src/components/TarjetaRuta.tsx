@@ -1,6 +1,6 @@
 import { IonIcon } from '@ionic/react';
 import { useNavigate } from 'react-router-dom';
-import { star } from 'ionicons/icons';
+import { locationOutline } from 'ionicons/icons';
 import { Ruta } from '../services/rutasService';
 import './TarjetaRuta.css';
 
@@ -18,13 +18,13 @@ export default function TarjetaRuta({ ruta }: { ruta: Ruta }) {
         <p className="tarjeta-ruta-nombre">{ruta.nombre}</p>
         <span className={claseDificultad(ruta.dificultad)}>{ruta.dificultad}</span>
         <p className="tarjeta-ruta-datos">
-          <span>{ruta.distancia} km</span>
-          <span>{ruta.desnivel} m</span>
+          <span>{ruta.distancia ?? '-'} km</span>
+          <span>{ruta.desnivel ?? '-'} m</span>
           <span>{ruta.duracion}</span>
         </p>
       </div>
       <span className="tarjeta-ruta-puntuacion">
-        <IonIcon icon={star} color="warning" /> {ruta.puntuacion} ({ruta.resenas})
+        <IonIcon icon={locationOutline} /> {ruta.comuna}
       </span>
     </div>
   );

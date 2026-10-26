@@ -13,7 +13,7 @@
 |---|---|
 | Antonia Albar | _parte 1.1 y 1.2_ |
 | Vicente Girardin | _figma_ |
-| Camila Ramirez | _1.4,1.5,1.6_ |
+| Camila Ramirez | _1.4,1.5,1.6 · EP 2.4 y 2.5: integración con la API, sesión con JWT y roles_ |
 
 ## Descripción del sistema
 
@@ -97,6 +97,7 @@ El problema se divide en tres partes:
 | Frontend | Ionic 9, React 19, TypeScript |
 | Navegación | React Router 6 (`@ionic/react-router`) |
 | Mapa | Leaflet con mapas de OpenStreetMap |
+| Conexión con la API | Axios, con interceptores para el token JWT y el manejo de errores |
 | Móvil | Capacitor |
 | Build | Vite |
 | Diseño | Figma |
@@ -131,9 +132,19 @@ cd frontend
 npm install
 ```
 
+3. (Opcional) Si la API no está en `http://localhost:3000/api`, crear el archivo `.env` a partir del ejemplo y cambiar la dirección:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Descripción | Valor por defecto |
+|---|---|---|
+| `VITE_API_URL` | Dirección de la API del backend | `http://localhost:3000/api` |
+
 ## Ejecución y uso
 
-Para levantar la aplicación en modo desarrollo:
+La aplicación usa los datos reales de la API, así que **primero hay que levantar el backend** (rama [`backend`](https://github.com/sharkreiza/TREKIA/tree/backend), con la base de datos creada y `npm run dev`). Luego, para levantar la aplicación en modo desarrollo:
 
 ```bash
 ionic serve
@@ -143,22 +154,45 @@ Se abrirá en el navegador en `http://localhost:8100`. Para ver la versión móv
 
 ### Usuarios de prueba
 
-Por ahora el frontend usa datos de prueba, porque el backend se implementará en la Entrega Parcial 2.
+Vienen en `datos_prueba.sql` del backend. También se puede crear una cuenta nueva desde **Registro**, que queda guardada en la base de datos.
 
 | Rol | Correo | Contraseña |
 |---|---|---|
 | Usuario | `usuario@gmail.com` | `Trekia123` |
 | Administrador | `admin@gmail.com` | `Admin123` |
-
-También se puede crear una cuenta nueva desde **Registro**, aunque se borra al recargar la página.
+| Usuario | `sofia@gmail.com` / `matias@gmail.com` | `Trekia123` |
 
 ### Qué probar
 
 - Entrar sin sesión a `/app/inicio` redirige a `/login`.
+- Iniciar sesión con una contraseña incorrecta muestra el error que responde la API.
 - Entrar como usuario a `/admin/propuestas` redirige a `/app/inicio`.
 - En **Inicio**, tocar un marcador del mapa o una categoría.
-- En **Explorar rutas**, usar el botón **Filtros**.
+- En **Explorar rutas**, usar el botón **Filtros**; en el detalle de una ruta, dejar un comentario.
+- En **Grupos**, crear un grupo; con otra cuenta, solicitar unirse; con la cuenta creadora, aceptar la solicitud.
 - En **Comunidad**, publicar algo y aceptar o rechazar una solicitud de amistad.
+- En **Proponer ruta**, enviar una ruta; como administrador, aprobarla en **Rutas propuestas** y verla publicada en Explorar rutas.
+- En **Cuenta → Configuración**, cambiar la ubicación y guardar.
+
+## Conexión con el backend (EP 2.4 y 2.5)
+
+Todas las pantallas leen y guardan los datos en la API REST del backend.
+
+**Consumo de la API (`src/services/api.ts`).** Se usa una instancia de Axios con la dirección de `VITE_API_URL` y dos interceptores:
+
+- **De petición:** agrega el header `Authorization: Bearer <token>` a todas las peticiones cuando hay sesión.
+- **De respuesta:** convierte cualquier error en un `ErrorApi` con el mensaje que manda el backend y los errores de cada campo, para mostrarlos en pantalla. Si no hay conexión, muestra un aviso. Si el backend responde 401 teniendo sesión (token vencido o inválido), cierra la sesión y la app vuelve a `/login`.
+
+Cada sección tiene su servicio (`authService`, `rutasService`, `gruposService`, `propuestasService`, `comunidadService`), que llama a la API y adapta las respuestas a lo que usan las pantallas. Las pantallas cargan los datos con el hook `useDatos` (`src/hooks/useDatos.ts`), que maneja el estado de carga y los errores, y vuelve a pedir los datos cada vez que se entra a la pantalla. El componente `Estado` muestra el indicador de carga o el error con un botón para reintentar.
+
+**Autenticación con JWT y roles.**
+
+- **Registro e inicio de sesión:** los formularios llaman a `/auth/register` y `/auth/login`, y muestran los errores de validación que responde el backend en el campo correspondiente.
+- **Token:** el JWT que devuelve el login se guarda junto con los datos del usuario (`AuthContext`). Al abrir la app se comprueba con `/auth/me` que el token siga siendo válido.
+- **Rutas protegidas:** `RutaPrivada` (`src/routes/Proteccion.tsx`) no deja entrar a `/app` sin sesión, ni a `/admin` sin el rol `administrador`. El menú solo muestra la sección de administración a ese rol.
+- **Roles en la interfaz:** solo el creador de un grupo ve y responde sus solicitudes; solo el autor (o un administrador) puede eliminar sus comentarios y publicaciones.
+
+Las capturas de los flujos funcionando con la API están en `docs/capturas-ep2/`.
 
 ---
 
@@ -169,8 +203,9 @@ frontend/
 ├── public/
 │   └── assets/            Imágenes
 └── src/
-    ├── components/        Componentes reutilizables (encabezado, menú lateral)
-    ├── context/           Manejo de la sesión (AuthContext)
+    ├── components/        Componentes reutilizables (encabezado, menú lateral, estado de carga)
+    ├── context/           Manejo de la sesión y el token (AuthContext)
+    ├── hooks/             useDatos: carga de datos desde la API
     ├── pages/             Pantallas agrupadas por sección
     │   ├── admin/
     │   ├── auth/
@@ -180,8 +215,9 @@ frontend/
     │   ├── inicio/
     │   └── rutas/
     ├── routes/            Rutas, pestañas y rutas protegidas
-    ├── services/          Datos de rutas, grupos, comunidad y autenticación
+    ├── services/          Conexión con la API (api.ts) y servicios por sección
     ├── theme/             Colores y tipografías
+    ├── utils/             Formato de fechas y duraciones
     └── App.tsx
 ```
 

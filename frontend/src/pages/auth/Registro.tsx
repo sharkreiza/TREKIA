@@ -6,6 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { arrowForward, eyeOffOutline, eyeOutline, lockClosedOutline, mailOutline, personOutline } from 'ionicons/icons';
 import { registrar } from '../../services/authService';
+import { ErrorApi } from '../../services/api';
 import './Auth.css';
 
 const erroresVacios = { nombre: '', correo: '', password: '', confirmar: '', terminos: '' };
@@ -67,7 +68,13 @@ export default function Registro() {
       mostrarToast({ message: 'Cuenta creada, ya puedes iniciar sesión', duration: 2500, color: 'success' });
       navigate('/login', { replace: true });
     } catch (error) {
-      setErrores({ ...erroresVacios, correo: (error as Error).message });
+      const campos = error instanceof ErrorApi ? error.campos : {};
+      setErrores({
+        ...erroresVacios,
+        nombre: campos.nombre ?? '',
+        password: campos.password ?? '',
+        correo: campos.correo ?? (Object.keys(campos).length === 0 ? (error as Error).message : ''),
+      });
     }
     setCargando(false);
   }
