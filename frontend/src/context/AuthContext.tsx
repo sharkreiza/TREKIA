@@ -1,43 +1,63 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { Usuario, login as loginService } from '../services/authService';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { Usuario, login as loginService, obtenerSesion } from '../services/authService';
+import { leerToken } from '../services/api';
 
 interface AuthContextType {
   user: Usuario | null;
   login: (correo: string, password: string, recordar: boolean) => Promise<Usuario>;
   logout: () => void;
+  actualizarUsuario: (usuario: Usuario) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-function sesionGuardada() {
-  const guardado = localStorage.getItem('usuario') || sessionStorage.getItem('usuario');
-  return guardado ? JSON.parse(guardado) : null;
+function almacen() {
+  return localStorage.getItem('token') ? localStorage : sessionStorage;
+}
+
+function sesionGuardada(): Usuario | null {
+  const guardado = localStorage.getItem('usuario') ?? sessionStorage.getItem('usuario');
+  return guardado && leerToken() ? JSON.parse(guardado) : null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Usuario | null>(sesionGuardada());
 
-  async function login(correo: string, password: string, recordar: boolean) {
-    const usuario = await loginService(correo, password);
-    setUser(usuario);
-
-    if (recordar) {
-      localStorage.setItem('usuario', JSON.stringify(usuario));
-    } else {
-      sessionStorage.setItem('usuario', JSON.stringify(usuario));
-    }
-
-    return usuario;
-  }
-
   function logout() {
     setUser(null);
     localStorage.removeItem('usuario');
+    localStorage.removeItem('token');
     sessionStorage.removeItem('usuario');
+    sessionStorage.removeItem('token');
   }
 
+  async function login(correo: string, password: string, recordar: boolean) {
+    const { token, usuario } = await loginService(correo, password);
+    const destino = recordar ? localStorage : sessionStorage;
+
+    destino.setItem('token', token);
+    destino.setItem('usuario', JSON.stringify(usuario));
+    setUser(usuario);
+    return usuario;
+  }
+
+  function actualizarUsuario(usuario: Usuario) {
+    almacen().setItem('usuario', JSON.stringify(usuario));
+    setUser(usuario);
+  }
+
+  useEffect(() => {
+    window.addEventListener('sesion-expirada', logout);
+
+    if (leerToken()) {
+      obtenerSesion().then(actualizarUsuario).catch(() => undefined);
+    }
+
+    return () => window.removeEventListener('sesion-expirada', logout);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, actualizarUsuario }}>
       {children}
     </AuthContext.Provider>
   );

@@ -21,7 +21,7 @@ export default function Rutas() {
 
         <Route path="/app/*" element={<RutaPrivada><Tabs /></RutaPrivada>} />
 
-        <Route path="/admin/*" element={<RutaPrivada rol="admin"><RutasAdmin /></RutaPrivada>} />
+        <Route path="/admin/*" element={<RutaPrivada rol="administrador"><RutasAdmin /></RutaPrivada>} />
 
         <Route path="/" element={<Navigate to={user ? paginaInicio(user.rol) : '/login'} replace />} />
       </IonRouterOutlet>

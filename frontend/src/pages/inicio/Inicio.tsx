@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { IonButton, IonContent, IonIcon, IonInput, IonPage, useIonViewDidEnter } from '@ionic/react';
 import { useNavigate } from 'react-router-dom';
-import { flameOutline, funnelOutline, leafOutline, locationOutline, searchOutline, starOutline, statsChartOutline, triangleOutline } from 'ionicons/icons';
+import { flameOutline, funnelOutline, leafOutline, locationOutline, searchOutline, statsChartOutline, timeOutline, triangleOutline } from 'ionicons/icons';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import AppHeader from '../../components/AppHeader';
 import TarjetaRuta from '../../components/TarjetaRuta';
-import { obtenerRutas, rutasDestacadas } from '../../services/rutasService';
-import { obtenerGrupos } from '../../services/gruposService';
+import Estado from '../../components/Estado';
+import { useDatos } from '../../hooks/useDatos';
+import { obtenerRutas } from '../../services/rutasService';
+import { proximosGrupos } from '../../services/gruposService';
 import './Inicio.css';
 
 const categorias = [
@@ -16,17 +18,20 @@ const categorias = [
   { nombre: 'Intermedio', icono: statsChartOutline, filtro: 'dificultad=Moderada' },
   { nombre: 'Avanzado', icono: flameOutline, filtro: 'dificultad=Alta' },
   { nombre: 'Cercanas', icono: locationOutline, filtro: 'region=Valparaíso' },
-  { nombre: 'Mejores valoradas', icono: starOutline, filtro: 'orden=puntuacion' },
+  { nombre: 'Recientes', icono: timeOutline, filtro: 'orden=recientes' },
 ];
 
 export default function Inicio() {
   const navigate = useNavigate();
   const divMapa = useRef<HTMLDivElement>(null);
   const mapa = useRef<L.Map | null>(null);
+  const marcadores = useRef<L.LayerGroup | null>(null);
   const [busqueda, setBusqueda] = useState('');
 
-  const destacadas = rutasDestacadas();
-  const grupos = obtenerGrupos().slice(0, 3);
+  const rutas = useDatos(() => obtenerRutas(), []);
+  const grupos = useDatos(proximosGrupos, []);
+
+  const recientes = [...rutas.datos].sort((a, b) => b.id - a.id).slice(0, 3);
 
   useEffect(() => {
     if (!divMapa.current || mapa.current) {
@@ -37,8 +42,21 @@ export default function Inicio() {
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap',
     }).addTo(mapa.current);
+    marcadores.current = L.layerGroup().addTo(mapa.current);
 
-    obtenerRutas().forEach((ruta) => {
+    return () => {
+      mapa.current?.remove();
+      mapa.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    marcadores.current?.clearLayers();
+
+    rutas.datos.forEach((ruta) => {
+      if (ruta.lat === null || ruta.lng === null) {
+        return;
+      }
       L.circleMarker([ruta.lat, ruta.lng], {
         radius: 9,
         color: '#ffffff',
@@ -46,16 +64,11 @@ export default function Inicio() {
         fillColor: '#2e4f3b',
         fillOpacity: 1,
       })
-        .addTo(mapa.current!)
+        .addTo(marcadores.current!)
         .bindTooltip(ruta.nombre)
         .on('click', () => navigate(`/app/rutas/${ruta.id}`));
     });
-
-    return () => {
-      mapa.current?.remove();
-      mapa.current = null;
-    };
-  }, [navigate]);
+  }, [rutas.datos, navigate]);
 
   useIonViewDidEnter(() => {
     mapa.current?.invalidateSize();
@@ -110,8 +123,9 @@ export default function Inicio() {
 
           <div>
             <div className="inicio-panel">
-              <h2>Rutas destacadas</h2>
-              {destacadas.map((ruta) => (
+              <h2>Rutas recientes</h2>
+              <Estado cargando={rutas.cargando} error={rutas.error} reintentar={rutas.recargar} />
+              {recientes.map((ruta) => (
                 <TarjetaRuta key={ruta.id} ruta={ruta} />
               ))}
               <IonButton fill="clear" size="small" routerLink="/app/rutas">Ver todas</IonButton>
@@ -119,7 +133,9 @@ export default function Inicio() {
 
             <div className="inicio-panel ion-margin-top">
               <h2>Próximos grupos de trekking</h2>
-              {grupos.map((grupo) => (
+              <Estado cargando={grupos.cargando} error={grupos.error} reintentar={grupos.recargar} />
+              {!grupos.cargando && !grupos.error && grupos.datos.length === 0 && <p>No hay salidas programadas.</p>}
+              {grupos.datos.slice(0, 3).map((grupo) => (
                 <div key={grupo.id} className="grupo-fila" onClick={() => navigate(`/app/grupos/${grupo.id}`)}>
                   <div className="grupo-fila-foto" />
                   <div>

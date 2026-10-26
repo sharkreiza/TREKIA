@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Rol } from '../services/authService';
 
 export function paginaInicio(rol: Rol) {
-  if (rol === 'admin') {
+  if (rol === 'administrador') {
     return '/admin/propuestas';
   }
   return '/app/inicio';

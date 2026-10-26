@@ -1,51 +1,97 @@
 import { useState } from 'react';
 import {
   IonButton, IonChip, IonContent, IonIcon, IonInput, IonPage,
-  IonSegment, IonSegmentButton, IonSelect, IonSelectOption, useIonToast,
+  IonSegment, IonSegmentButton, IonTextarea, useIonToast,
 } from '@ionic/react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { personCircle } from 'ionicons/icons';
 import AppHeader from '../../components/AppHeader';
-import TarjetaRuta from '../../components/TarjetaRuta';
+import Estado from '../../components/Estado';
+import { claseDificultad } from '../../components/TarjetaRuta';
 import { useAuth } from '../../context/AuthContext';
-import { rutasDestacadas } from '../../services/rutasService';
+import { useDatos } from '../../hooks/useDatos';
+import { actualizarPerfil, obtenerUsuario } from '../../services/authService';
+import { enviarSolicitudAmistad } from '../../services/comunidadService';
+import { obtenerGrupos, obtenerMisSolicitudes } from '../../services/gruposService';
+import { obtenerPropuestas } from '../../services/propuestasService';
+import { ErrorApi } from '../../services/api';
+import { capitalizar } from '../../utils/formatos';
+import '../inicio/Inicio.css';
 import './Cuenta.css';
 
-const intereses = ['Trekking', 'Montaña', 'Fotografía', 'Naturaleza', 'Vida al aire libre', 'Camping'];
+function PerfilAjeno({ id }: { id: number }) {
+  const [mostrarToast] = useIonToast();
+  const perfil = useDatos(() => obtenerUsuario(id), null, [id]);
+
+  async function agregar() {
+    try {
+      await enviarSolicitudAmistad(id);
+      mostrarToast({ message: 'Solicitud enviada', duration: 2000, color: 'success' });
+    } catch (error) {
+      mostrarToast({ message: (error as Error).message, duration: 2500, color: 'danger' });
+    }
+  }
+
+  return (
+    <IonPage>
+      <AppHeader titulo="Perfil" volverA="/app/comunidad" />
+      <IonContent className="ion-padding">
+        <Estado cargando={perfil.cargando} error={perfil.error} />
+        {perfil.datos && (
+          <>
+            <div className="cuenta-portada" />
+            <div className="cuenta-cabecera">
+              <div className="cuenta-avatar">
+                <IonIcon icon={personCircle} />
+              </div>
+              <div>
+                <h1 className="cuenta-nombre">{perfil.datos.nombre}</h1>
+                <p className="cuenta-rol">{perfil.datos.ubicacion ?? 'Miembro de la comunidad'}</p>
+              </div>
+            </div>
+            {perfil.datos.biografia && <p>{perfil.datos.biografia}</p>}
+            <IonButton className="ion-margin-top" onClick={agregar}>
+              Enviar solicitud de amistad
+            </IonButton>
+          </>
+        )}
+      </IonContent>
+    </IonPage>
+  );
+}
 
 export default function Cuenta() {
   const { userId } = useParams();
-  const { user } = useAuth();
+  const { user, actualizarUsuario } = useAuth();
+  const navigate = useNavigate();
   const [mostrarToast] = useIonToast();
 
   const [pestana, setPestana] = useState('perfil');
-  const [ubicacion, setUbicacion] = useState('Valparaíso, Chile');
-  const [correoExtra, setCorreoExtra] = useState('');
-  const [zonaHoraria, setZonaHoraria] = useState('UTC-3');
+  const [nombre, setNombre] = useState(user?.nombre ?? '');
+  const [ubicacion, setUbicacion] = useState(user?.ubicacion ?? '');
+  const [biografia, setBiografia] = useState(user?.biografia ?? '');
+  const [error, setError] = useState('');
 
-  const misRutas = rutasDestacadas();
+  const misGrupos = useDatos(() => obtenerGrupos({ creadorId: user?.id }), [], [user?.id]);
+  const misSolicitudes = useDatos(obtenerMisSolicitudes, []);
+  const misPropuestas = useDatos(() => obtenerPropuestas(), []);
 
-  if (userId) {
-    return (
-      <IonPage>
-        <AppHeader titulo="Perfil" volverA="/app/comunidad" />
-        <IonContent className="ion-padding">
-          <div className="cuenta-portada" />
-          <div className="cuenta-cabecera">
-            <div className="cuenta-avatar">
-              <IonIcon icon={personCircle} />
-            </div>
-            <div>
-              <h1 className="cuenta-nombre">Usuario {userId}</h1>
-              <p className="cuenta-rol">Miembro de la comunidad</p>
-            </div>
-          </div>
-          <IonButton className="ion-margin-top" onClick={() => mostrarToast({ message: 'Solicitud enviada', duration: 2000, color: 'success' })}>
-            Enviar solicitud de amistad
-          </IonButton>
-        </IonContent>
-      </IonPage>
-    );
+  if (userId && Number(userId) !== user?.id) {
+    return <PerfilAjeno id={Number(userId)} />;
+  }
+
+  const salidas = misSolicitudes.datos.filter((s) => s.estado === 'aceptada');
+
+  async function guardar() {
+    setError('');
+    try {
+      const actualizado = await actualizarPerfil({ nombre, ubicacion, biografia });
+      actualizarUsuario(actualizado);
+      mostrarToast({ message: 'Cambios guardados', duration: 2000, color: 'success' });
+    } catch (e) {
+      const campos = e instanceof ErrorApi ? Object.values(e.campos) : [];
+      setError(campos.length > 0 ? campos.join('. ') : (e as Error).message);
+    }
   }
 
   return (
@@ -59,7 +105,7 @@ export default function Cuenta() {
           </div>
           <div>
             <h1 className="cuenta-nombre">{user?.nombre}</h1>
-            <p className="cuenta-rol">Comunidad Trekia</p>
+            <p className="cuenta-rol">{user?.rol === 'administrador' ? 'Administrador' : 'Comunidad Trekia'}</p>
           </div>
         </div>
 
@@ -84,17 +130,13 @@ export default function Cuenta() {
                 </div>
                 <div className="cuenta-dato">
                   <span>Ubicación</span>
-                  <span>{ubicacion}</span>
+                  <span>{user?.ubicacion || 'Sin ubicación'}</span>
                 </div>
               </div>
 
               <div className="cuenta-panel">
-                <h2>Intereses</h2>
-                <div className="cuenta-intereses">
-                  {intereses.map((interes) => (
-                    <IonChip key={interes} outline>{interes}</IonChip>
-                  ))}
-                </div>
+                <h2>Sobre mí</h2>
+                <p>{user?.biografia || 'Todavía no escribes una biografía.'}</p>
               </div>
             </div>
 
@@ -103,24 +145,45 @@ export default function Cuenta() {
                 <h2>Mis estadísticas</h2>
                 <div className="cuenta-estadisticas">
                   <div className="cuenta-estadistica">
-                    <strong>22</strong>
-                    <span>Rutas realizadas</span>
+                    <strong>{misGrupos.datos.length}</strong>
+                    <span>Grupos creados</span>
                   </div>
                   <div className="cuenta-estadistica">
-                    <strong>256 km</strong>
-                    <span>Distancia total</span>
+                    <strong>{salidas.length}</strong>
+                    <span>Salidas con otros grupos</span>
                   </div>
                   <div className="cuenta-estadistica">
-                    <strong>48 h</strong>
-                    <span>Tiempo en ruta</span>
+                    <strong>{misPropuestas.datos.length}</strong>
+                    <span>Rutas propuestas</span>
                   </div>
                 </div>
               </div>
 
               <div className="cuenta-panel">
-                <h2>Actividad reciente</h2>
-                {misRutas.slice(0, 2).map((ruta) => (
-                  <TarjetaRuta key={ruta.id} ruta={ruta} />
+                <h2>Mis grupos</h2>
+                <Estado cargando={misGrupos.cargando} error={misGrupos.error} />
+                {!misGrupos.cargando && misGrupos.datos.length === 0 && <p>Todavía no creas grupos.</p>}
+                {misGrupos.datos.map((grupo) => (
+                  <div key={grupo.id} className="grupo-fila" onClick={() => navigate(`/app/grupos/${grupo.id}`)}>
+                    <div className="grupo-fila-foto" />
+                    <div>
+                      <p className="grupo-nombre">{grupo.nombre}</p>
+                      <p>{grupo.fecha}, {grupo.hora}</p>
+                      <p>{grupo.participantes}/{grupo.cupos} participantes</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="cuenta-panel">
+                <h2>Mis solicitudes a grupos</h2>
+                <Estado cargando={misSolicitudes.cargando} error={misSolicitudes.error} />
+                {!misSolicitudes.cargando && misSolicitudes.datos.length === 0 && <p>No has solicitado unirte a grupos.</p>}
+                {misSolicitudes.datos.map((solicitud) => (
+                  <div key={solicitud.id} className="cuenta-dato" onClick={() => navigate(`/app/grupos/${solicitud.grupoId}`)}>
+                    <span>{solicitud.grupo}, {solicitud.fecha}</span>
+                    <span>{capitalizar(solicitud.estado)}</span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -129,9 +192,17 @@ export default function Cuenta() {
 
         {pestana === 'rutas' && (
           <div className="cuenta-panel ion-margin-top">
-            <h2>Mis rutas</h2>
-            {misRutas.map((ruta) => (
-              <TarjetaRuta key={ruta.id} ruta={ruta} />
+            <h2>Rutas que propuse</h2>
+            <Estado cargando={misPropuestas.cargando} error={misPropuestas.error} />
+            {!misPropuestas.cargando && misPropuestas.datos.length === 0 && <p>Todavía no propones rutas.</p>}
+            {misPropuestas.datos.map((propuesta) => (
+              <div key={propuesta.id} className="cuenta-dato">
+                <span>
+                  {propuesta.nombre} <span className={claseDificultad(propuesta.dificultad)}>{propuesta.dificultad}</span>
+                  {propuesta.observaciones && <><br /><small>{propuesta.observaciones}</small></>}
+                </span>
+                <IonChip outline>{capitalizar(propuesta.estado)}</IonChip>
+              </div>
             ))}
           </div>
         )}
@@ -141,37 +212,32 @@ export default function Cuenta() {
             <h2>Configuración de la cuenta</h2>
             <IonInput
               className="ion-margin-bottom"
-              label="Ubicación"
+              label="Nombre"
               labelPlacement="stacked"
               fill="outline"
-              value={ubicacion}
-              onIonInput={(e) => setUbicacion(e.detail.value ?? '')}
+              value={nombre}
+              onIonInput={(e) => setNombre(e.detail.value ?? '')}
             />
             <IonInput
               className="ion-margin-bottom"
-              label="Correo adicional"
+              label="Ubicación"
               labelPlacement="stacked"
               fill="outline"
-              type="email"
-              placeholder="otro@correo.cl"
-              value={correoExtra}
-              onIonInput={(e) => setCorreoExtra(e.detail.value ?? '')}
+              placeholder="Ej: Valparaíso, Chile"
+              value={ubicacion}
+              onIonInput={(e) => setUbicacion(e.detail.value ?? '')}
             />
-            <IonSelect
-              label="Zona horaria"
+            <IonTextarea
+              label="Sobre mí"
               labelPlacement="stacked"
               fill="outline"
-              value={zonaHoraria}
-              onIonChange={(e) => setZonaHoraria(e.detail.value)}
-            >
-              <IonSelectOption value="UTC-3">UTC-3</IonSelectOption>
-              <IonSelectOption value="UTC-4">UTC-4</IonSelectOption>
-              <IonSelectOption value="UTC-5">UTC-5</IonSelectOption>
-            </IonSelect>
-            <IonButton
-              className="ion-margin-top"
-              onClick={() => mostrarToast({ message: 'Cambios guardados', duration: 2000, color: 'success' })}
-            >
+              autoGrow
+              placeholder="Cuéntale a la comunidad qué rutas te gustan"
+              value={biografia}
+              onIonInput={(e) => setBiografia(e.detail.value ?? '')}
+            />
+            {error && <p className="auth-error">{error}</p>}
+            <IonButton className="ion-margin-top" onClick={guardar}>
               Guardar cambios
             </IonButton>
           </div>
