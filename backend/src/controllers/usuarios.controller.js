@@ -10,4 +10,12 @@ async function obtener(req, res) {
   return ok(res, usuario);
 }
 
-module.exports = { obtener };
+async function actualizarPerfil(req, res) {
+  const usuario = await usuariosRepo.actualizar(req.usuario.id, req.valid);
+  if (usuario === undefined) {
+    throw new HttpError(400, 'No se envió ningún campo para actualizar');
+  }
+  return ok(res, usuario, 'Perfil actualizado');
+}
+
+module.exports = { obtener, actualizarPerfil };

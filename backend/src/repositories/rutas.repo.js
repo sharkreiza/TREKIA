@@ -96,4 +96,30 @@ async function actualizar(id, cambios) {
   return rows[0] || null;
 }
 
-module.exports = { listar, buscarPorId, actualizar };
+async function crear(creadorId, datos) {
+  const columnas = ['creador_id'];
+  const valores = [creadorId];
+
+  for (const [clave, columna] of Object.entries(RUTA_ACTUALIZABLES)) {
+    if (datos[clave] !== undefined) {
+      columnas.push(columna);
+      valores.push(datos[clave]);
+    }
+  }
+
+  const marcadores = valores.map((_, i) => `$${i + 1}`).join(', ');
+  const { rows } = await pool.query(
+    `INSERT INTO rutas (${columnas.join(', ')})
+     VALUES (${marcadores})
+     RETURNING ${RUTA_COLUMNAS_PUBLICAS}`,
+    valores,
+  );
+  return rows[0];
+}
+
+async function eliminar(id) {
+  const { rowCount } = await pool.query('DELETE FROM rutas WHERE id_ruta = $1', [id]);
+  return rowCount > 0;
+}
+
+module.exports = { listar, buscarPorId, crear, actualizar, eliminar };

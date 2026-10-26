@@ -1,0 +1,514 @@
+newman
+
+Trekia API
+
+❏ 0. Salud
+↳ Servidor funcionando
+  GET http://localhost:3000/api/salud [200 OK, 959B, 40ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+❏ 1. Autenticación
+↳ Registrar usuario nuevo
+  POST http://localhost:3000/api/auth/register [201 Created, 1.45kB, 158ms]
+  ✓  Responde 201
+  ✓  Formato { ok, data, message, errors }
+  ✓  Devuelve token y el rol es usuario
+
+↳ Registrar correo repetido
+  POST http://localhost:3000/api/auth/register [409 Conflict, 1.05kB, 160ms]
+  ✓  Responde 409
+  ✓  Formato { ok, data, message, errors }
+
+↳ Registrar con datos inválidos
+  POST http://localhost:3000/api/auth/register [400 Bad Request, 1.25kB, 4ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+  ✓  Indica los campos con error
+
+↳ Iniciar sesión (usuario)
+  POST http://localhost:3000/api/auth/login [200 OK, 1.43kB, 79ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Iniciar sesión (administrador)
+  POST http://localhost:3000/api/auth/login [200 OK, 1.44kB, 59ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  El rol es administrador
+
+↳ Iniciar sesión con contraseña incorrecta
+  POST http://localhost:3000/api/auth/login [401 Unauthorized, 1.05kB, 75ms]
+  ✓  Responde 401
+  ✓  Formato { ok, data, message, errors }
+
+↳ Usuario de la sesión
+  GET http://localhost:3000/api/auth/me [200 OK, 1.16kB, 8ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Usuario de la sesión sin token
+  GET http://localhost:3000/api/auth/me [401 Unauthorized, 971B, 7ms]
+  ✓  Responde 401
+  ✓  Formato { ok, data, message, errors }
+
+↳ Usuario de la sesión con token inválido
+  GET http://localhost:3000/api/auth/me [401 Unauthorized, 965B, 5ms]
+  ✓  Responde 401
+  ✓  Formato { ok, data, message, errors }
+
+❏ 2. Usuarios
+↳ Perfil de un usuario
+  GET http://localhost:3000/api/usuarios/1 [200 OK, 1.16kB, 7ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Perfil con id inválido
+  GET http://localhost:3000/api/usuarios/abc [400 Bad Request, 1.02kB, 5ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Perfil que no existe
+  GET http://localhost:3000/api/usuarios/99999 [404 Not Found, 968B, 5ms]
+  ✓  Responde 404
+  ✓  Formato { ok, data, message, errors }
+
+↳ Editar mi perfil
+  PATCH http://localhost:3000/api/usuarios/me [200 OK, 1.23kB, 7ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Se guardó la ubicación
+
+↳ Editar perfil sin campos
+  PATCH http://localhost:3000/api/usuarios/me [400 Bad Request, 991B, 3ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Editar perfil con nombre inválido
+  PATCH http://localhost:3000/api/usuarios/me [400 Bad Request, 1.03kB, 5ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+❏ 3. Rutas
+↳ Listar rutas
+  GET http://localhost:3000/api/rutas [200 OK, 3.2kB, 10ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Devuelve una lista
+
+↳ Filtrar y ordenar rutas
+  GET http://localhost:3000/api/rutas?dificultad=baja&orden=distancia&direccion=desc [200 OK, 1.82kB, 9ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Todas son de dificultad baja
+
+↳ Filtro con valor inválido
+  GET http://localhost:3000/api/rutas?dificultad=extrema [400 Bad Request, 1.04kB, 8ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Intento de inyección SQL en la búsqueda
+  GET http://localhost:3000/api/rutas?busqueda=' OR '1'='1 [200 OK, 939B, 10ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Se trata como texto y no devuelve rutas
+
+↳ Detalle de una ruta
+  GET http://localhost:3000/api/rutas/1 [200 OK, 1.41kB, 4ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Detalle de una ruta que no existe
+  GET http://localhost:3000/api/rutas/99999 [404 Not Found, 965B, 7ms]
+  ✓  Responde 404
+  ✓  Formato { ok, data, message, errors }
+
+↳ Crear ruta (administrador)
+  POST http://localhost:3000/api/rutas [201 Created, 1.41kB, 21ms]
+  ✓  Responde 201
+  ✓  Formato { ok, data, message, errors }
+
+↳ Crear ruta sin ser administrador
+  POST http://localhost:3000/api/rutas [403 Forbidden, 983B, 4ms]
+  ✓  Responde 403
+  ✓  Formato { ok, data, message, errors }
+
+↳ Crear ruta sin token
+  POST http://localhost:3000/api/rutas [401 Unauthorized, 971B, 3ms]
+  ✓  Responde 401
+  ✓  Formato { ok, data, message, errors }
+
+↳ Crear ruta con datos incompletos
+  POST http://localhost:3000/api/rutas [400 Bad Request, 1.28kB, 4ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Modificar ruta (administrador)
+  PATCH http://localhost:3000/api/rutas/6 [200 OK, 1.42kB, 7ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Se actualizó la distancia
+
+↳ Modificar ruta sin campos
+  PATCH http://localhost:3000/api/rutas/6 [400 Bad Request, 991B, 6ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Modificar ruta que no existe
+  PATCH http://localhost:3000/api/rutas/99999 [404 Not Found, 965B, 7ms]
+  ✓  Responde 404
+  ✓  Formato { ok, data, message, errors }
+
+❏ 4. Comentarios
+↳ Comentarios de una ruta
+  GET http://localhost:3000/api/rutas/1/comentarios [200 OK, 1.13kB, 6ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Comentar una ruta
+  POST http://localhost:3000/api/rutas/6/comentarios [201 Created, 1.15kB, 8ms]
+  ✓  Responde 201
+  ✓  Formato { ok, data, message, errors }
+
+↳ Comentario vacío
+  POST http://localhost:3000/api/rutas/6/comentarios [400 Bad Request, 1.03kB, 6ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Editar comentario propio
+  PATCH http://localhost:3000/api/comentarios/3 [200 OK, 1.14kB, 9ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Editar comentario de otra persona
+  PATCH http://localhost:3000/api/comentarios/3 [403 Forbidden, 989B, 4ms]
+  ✓  Responde 403
+  ✓  Formato { ok, data, message, errors }
+
+↳ Eliminar comentario de otra persona
+  DELETE http://localhost:3000/api/comentarios/3 [403 Forbidden, 992B, 5ms]
+  ✓  Responde 403
+  ✓  Formato { ok, data, message, errors }
+
+↳ Eliminar comentario propio
+  DELETE http://localhost:3000/api/comentarios/3 [200 OK, 959B, 6ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+❏ 5. Grupos
+↳ Listar grupos
+  GET http://localhost:3000/api/grupos [200 OK, 1.98kB, 9ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Grupos de una ruta
+  GET http://localhost:3000/api/grupos?rutaId=2 [200 OK, 1.29kB, 6ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Todos son de la ruta 2
+
+↳ Detalle de un grupo
+  GET http://localhost:3000/api/grupos/1 [200 OK, 1.29kB, 4ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Detalle de un grupo que no existe
+  GET http://localhost:3000/api/grupos/99999 [404 Not Found, 966B, 5ms]
+  ✓  Responde 404
+  ✓  Formato { ok, data, message, errors }
+
+↳ Crear grupo
+  POST http://localhost:3000/api/grupos [201 Created, 1.28kB, 12ms]
+  ✓  Responde 201
+  ✓  Formato { ok, data, message, errors }
+  ✓  El creador es el usuario de la sesión
+
+↳ Crear grupo con fecha pasada y cupo inválido
+  POST http://localhost:3000/api/grupos [400 Bad Request, 1.09kB, 5ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Crear grupo en una ruta que no existe
+  POST http://localhost:3000/api/grupos [400 Bad Request, 975B, 7ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Crear grupo sin token
+  POST http://localhost:3000/api/grupos [401 Unauthorized, 971B, 3ms]
+  ✓  Responde 401
+  ✓  Formato { ok, data, message, errors }
+
+↳ Modificar grupo propio
+  PATCH http://localhost:3000/api/grupos/4 [200 OK, 1.28kB, 9ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Modificar grupo de otra persona
+  PATCH http://localhost:3000/api/grupos/4 [403 Forbidden, 989B, 6ms]
+  ✓  Responde 403
+  ✓  Formato { ok, data, message, errors }
+
+❏ 6. Solicitudes a grupos
+↳ Solicitar unirse a un grupo
+  POST http://localhost:3000/api/grupos/4/solicitudes [201 Created, 1.09kB, 8ms]
+  ✓  Responde 201
+  ✓  Formato { ok, data, message, errors }
+  ✓  Queda pendiente
+
+↳ Solicitar dos veces al mismo grupo
+  POST http://localhost:3000/api/grupos/4/solicitudes [409 Conflict, 984B, 8ms]
+  ✓  Responde 409
+  ✓  Formato { ok, data, message, errors }
+
+↳ El creador solicita unirse a su grupo
+  POST http://localhost:3000/api/grupos/4/solicitudes [400 Bad Request, 981B, 12ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Solicitudes del grupo (creador)
+  GET http://localhost:3000/api/grupos/4/solicitudes [200 OK, 1.11kB, 6ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Solicitudes del grupo sin ser el creador
+  GET http://localhost:3000/api/grupos/4/solicitudes [403 Forbidden, 989B, 4ms]
+  ✓  Responde 403
+  ✓  Formato { ok, data, message, errors }
+
+↳ Responder solicitud sin ser el creador
+  PATCH http://localhost:3000/api/grupos/4/solicitudes/3 [403 Forbidden, 989B, 5ms]
+  ✓  Responde 403
+  ✓  Formato { ok, data, message, errors }
+
+↳ Aceptar solicitud
+  PATCH http://localhost:3000/api/grupos/4/solicitudes/3 [200 OK, 1.11kB, 6ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Responder una solicitud ya respondida
+  PATCH http://localhost:3000/api/grupos/4/solicitudes/3 [409 Conflict, 976B, 5ms]
+  ✓  Responde 409
+  ✓  Formato { ok, data, message, errors }
+
+↳ Participantes del grupo
+  GET http://localhost:3000/api/grupos/4 [200 OK, 1.26kB, 3ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Ahora tiene 2 participantes
+
+↳ Mis solicitudes
+  GET http://localhost:3000/api/solicitudes [200 OK, 1.19kB, 8ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Aparece la solicitud aceptada
+
+↳ Salir del grupo (eliminar solicitud propia)
+  DELETE http://localhost:3000/api/grupos/4/solicitudes/3 [200 OK, 958B, 7ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+❏ 7. Propuestas de rutas
+↳ Proponer una ruta
+  POST http://localhost:3000/api/propuestas [201 Created, 1.55kB, 9ms]
+  ✓  Responde 201
+  ✓  Formato { ok, data, message, errors }
+  ✓  Queda pendiente
+
+↳ Proponer con datos incompletos
+  POST http://localhost:3000/api/propuestas [400 Bad Request, 1.21kB, 3ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Mis propuestas
+  GET http://localhost:3000/api/propuestas [200 OK, 1.52kB, 6ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Solo ve sus propias propuestas
+
+↳ Propuestas pendientes (administrador)
+  GET http://localhost:3000/api/propuestas?estado=pendiente [200 OK, 2.66kB, 4ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Todas están pendientes
+
+↳ Ver propuesta de otra persona
+  GET http://localhost:3000/api/propuestas/3 [404 Not Found, 970B, 6ms]
+  ✓  Responde 404
+  ✓  Formato { ok, data, message, errors }
+
+↳ Revisar propuesta sin ser administrador
+  PATCH http://localhost:3000/api/propuestas/3/revision [403 Forbidden, 983B, 5ms]
+  ✓  Responde 403
+  ✓  Formato { ok, data, message, errors }
+
+↳ Aprobar propuesta (administrador)
+  PATCH http://localhost:3000/api/propuestas/3/revision [200 OK, 1.58kB, 9ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Se publicó como ruta
+
+↳ Revisar una propuesta ya revisada
+  PATCH http://localhost:3000/api/propuestas/3/revision [409 Conflict, 974B, 5ms]
+  ✓  Responde 409
+  ✓  Formato { ok, data, message, errors }
+
+↳ La ruta aprobada ya es pública
+  GET http://localhost:3000/api/rutas/7 [200 OK, 1.39kB, 3ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Eliminar propuesta ya revisada
+  DELETE http://localhost:3000/api/propuestas/3 [409 Conflict, 988B, 3ms]
+  ✓  Responde 409
+  ✓  Formato { ok, data, message, errors }
+
+❏ 8. Publicaciones
+↳ Ver publicaciones
+  GET http://localhost:3000/api/publicaciones [200 OK, 1.5kB, 4ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Ver publicaciones sin token
+  GET http://localhost:3000/api/publicaciones [401 Unauthorized, 971B, 4ms]
+  ✓  Responde 401
+  ✓  Formato { ok, data, message, errors }
+
+↳ Publicar
+  POST http://localhost:3000/api/publicaciones [201 Created, 1.16kB, 6ms]
+  ✓  Responde 201
+  ✓  Formato { ok, data, message, errors }
+
+↳ Publicación vacía
+  POST http://localhost:3000/api/publicaciones [400 Bad Request, 1.03kB, 2ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Eliminar publicación de otra persona
+  DELETE http://localhost:3000/api/publicaciones/3 [403 Forbidden, 993B, 4ms]
+  ✓  Responde 403
+  ✓  Formato { ok, data, message, errors }
+
+↳ Eliminar publicación propia
+  DELETE http://localhost:3000/api/publicaciones/3 [200 OK, 961B, 4ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+❏ 9. Amistades
+↳ Enviar solicitud de amistad
+  POST http://localhost:3000/api/amistades [201 Created, 1.09kB, 7ms]
+  ✓  Responde 201
+  ✓  Formato { ok, data, message, errors }
+
+↳ Enviar solicitud repetida
+  POST http://localhost:3000/api/amistades [409 Conflict, 1kB, 7ms]
+  ✓  Responde 409
+  ✓  Formato { ok, data, message, errors }
+
+↳ Enviarse una solicitud a sí mismo
+  POST http://localhost:3000/api/amistades [400 Bad Request, 992B, 3ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Solicitud a un usuario que no existe
+  POST http://localhost:3000/api/amistades [404 Not Found, 968B, 8ms]
+  ✓  Responde 404
+  ✓  Formato { ok, data, message, errors }
+
+↳ Solicitudes recibidas
+  GET http://localhost:3000/api/amistades/solicitudes [200 OK, 1.05kB, 4ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Aparece la solicitud recibida
+
+↳ Responder una solicitud enviada por uno mismo
+  PATCH http://localhost:3000/api/amistades/3 [404 Not Found, 970B, 4ms]
+  ✓  Responde 404
+  ✓  Formato { ok, data, message, errors }
+
+↳ Aceptar solicitud de amistad
+  PATCH http://localhost:3000/api/amistades/3 [200 OK, 1.08kB, 5ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Responder una solicitud ya respondida
+  PATCH http://localhost:3000/api/amistades/3 [409 Conflict, 976B, 4ms]
+  ✓  Responde 409
+  ✓  Formato { ok, data, message, errors }
+
+↳ Lista de amigos
+  GET http://localhost:3000/api/amistades [200 OK, 1.07kB, 5ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+  ✓  Tiene un amigo
+
+↳ Eliminar amistad
+  DELETE http://localhost:3000/api/amistades/3 [200 OK, 956B, 5ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+❏ 10. Eliminar
+↳ Eliminar grupo de otra persona
+  DELETE http://localhost:3000/api/grupos/4 [403 Forbidden, 989B, 5ms]
+  ✓  Responde 403
+  ✓  Formato { ok, data, message, errors }
+
+↳ Eliminar grupo propio
+  DELETE http://localhost:3000/api/grupos/4 [200 OK, 954B, 6ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ El grupo ya no existe
+  GET http://localhost:3000/api/grupos/4 [404 Not Found, 966B, 7ms]
+  ✓  Responde 404
+  ✓  Formato { ok, data, message, errors }
+
+↳ Eliminar ruta con grupos asociados
+  DELETE http://localhost:3000/api/rutas/2 [409 Conflict, 1.02kB, 7ms]
+  ✓  Responde 409
+  ✓  Formato { ok, data, message, errors }
+
+↳ Eliminar ruta sin ser administrador
+  DELETE http://localhost:3000/api/rutas/6 [403 Forbidden, 983B, 2ms]
+  ✓  Responde 403
+  ✓  Formato { ok, data, message, errors }
+
+↳ Eliminar ruta (administrador)
+  DELETE http://localhost:3000/api/rutas/6 [200 OK, 953B, 9ms]
+  ✓  Responde 200
+  ✓  Formato { ok, data, message, errors }
+
+↳ Eliminar ruta que ya no existe
+  DELETE http://localhost:3000/api/rutas/6 [404 Not Found, 965B, 3ms]
+  ✓  Responde 404
+  ✓  Formato { ok, data, message, errors }
+
+❏ 11. Errores generales
+↳ JSON mal escrito
+  POST http://localhost:3000/api/auth/login [400 Bad Request, 996B, 4ms]
+  ✓  Responde 400
+  ✓  Formato { ok, data, message, errors }
+
+↳ Endpoint que no existe
+  GET http://localhost:3000/api/no-existe [404 Not Found, 968B, 1ms]
+  ✓  Responde 404
+  ✓  Formato { ok, data, message, errors }
+
+┌─────────────────────────┬───────────────────┬──────────────────┐
+│                         │          executed │           failed │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              iterations │                 1 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│                requests │                92 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│            test-scripts │                92 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│      prerequest-scripts │                 2 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              assertions │               203 │                0 │
+├─────────────────────────┴───────────────────┴──────────────────┤
+│ total run duration: 2.4s                                       │
+├────────────────────────────────────────────────────────────────┤
+│ total data received: 23.28kB (approx)                          │
+├────────────────────────────────────────────────────────────────┤
+│ average response time: 11ms [min: 1ms, max: 160ms, s.d.: 25ms] │
+└────────────────────────────────────────────────────────────────┘
