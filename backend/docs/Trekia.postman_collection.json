@@ -1,0 +1,4455 @@
+{
+  "info": {
+    "name": "Trekia API",
+    "description": "Pruebas de la API REST de Trekia (EP2). Requiere la base de datos con trekia_schema.sql y datos_prueba.sql. Ejecutar en orden con el Collection Runner.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "tokenUsuario",
+      "value": ""
+    },
+    {
+      "key": "tokenAdmin",
+      "value": ""
+    },
+    {
+      "key": "tokenOtro",
+      "value": ""
+    },
+    {
+      "key": "otroId",
+      "value": ""
+    },
+    {
+      "key": "correoNuevo",
+      "value": ""
+    },
+    {
+      "key": "publicacionId",
+      "value": ""
+    },
+    {
+      "key": "amistadId",
+      "value": ""
+    },
+    {
+      "key": "fechaFutura",
+      "value": ""
+    },
+    {
+      "key": "rutaId",
+      "value": ""
+    },
+    {
+      "key": "comentarioId",
+      "value": ""
+    },
+    {
+      "key": "grupoId",
+      "value": ""
+    },
+    {
+      "key": "solicitudId",
+      "value": ""
+    },
+    {
+      "key": "propuestaId",
+      "value": ""
+    },
+    {
+      "key": "rutaAprobadaId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Salud",
+      "item": [
+        {
+          "name": "Servidor funcionando",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/salud",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "salud"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Autenticación",
+      "item": [
+        {
+          "name": "Registrar usuario nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "El campo rol se ignora: todo registro queda con rol usuario.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Persona de Prueba\",\n  \"correo\": \"{{correoNuevo}}\",\n  \"password\": \"Prueba123\",\n  \"rol\": \"administrador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Devuelve token y el rol es usuario', () => {",
+                  "  pm.expect(json.data.token).to.be.a('string');",
+                  "  pm.expect(json.data.usuario.rol).to.eql('usuario');",
+                  "  pm.expect(json.data.usuario).to.not.have.property('password_hash');",
+                  "});",
+                  "pm.collectionVariables.set('tokenOtro', json.data.token);",
+                  "pm.collectionVariables.set('otroId', json.data.usuario.id_usuario);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('correoNuevo', 'prueba' + Date.now() + '@gmail.com');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar correo repetido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Persona de Prueba\",\n  \"correo\": \"{{correoNuevo}}\",\n  \"password\": \"Prueba123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar con datos inválidos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"A\",\n  \"correo\": \"malo\",\n  \"password\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});",
+                  "pm.test('Indica los campos con error', () => pm.expect(json.errors.length).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar sesión (usuario)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"usuario@gmail.com\",\n  \"password\": \"Trekia123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.collectionVariables.set('tokenUsuario', json.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar sesión (administrador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@gmail.com\",\n  \"password\": \"Admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('El rol es administrador', () => pm.expect(json.data.usuario.rol).to.eql('administrador'));",
+                  "pm.collectionVariables.set('tokenAdmin', json.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar sesión con contraseña incorrecta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"usuario@gmail.com\",\n  \"password\": \"Incorrecta1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Usuario de la sesión",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Usuario de la sesión sin token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Usuario de la sesión con token inválido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer token.falso.123"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Usuarios",
+      "item": [
+        {
+          "name": "Perfil de un usuario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Perfil con id inválido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "abc"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Perfil que no existe",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "99999"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar mi perfil",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ubicacion\": \"Valparaíso, Chile\",\n  \"biografia\": \"Me gustan las rutas de cordillera.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Se guardó la ubicación', () => pm.expect(json.data.ubicacion).to.eql('Valparaíso, Chile'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar perfil sin campos",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar perfil con nombre inválido",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"A\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Rutas",
+      "item": [
+        {
+          "name": "Listar rutas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Devuelve una lista', () => pm.expect(json.data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtrar y ordenar rutas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas?dificultad=baja&orden=distancia&direccion=desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ],
+              "query": [
+                {
+                  "key": "dificultad",
+                  "value": "baja"
+                },
+                {
+                  "key": "orden",
+                  "value": "distancia"
+                },
+                {
+                  "key": "direccion",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Todas son de dificultad baja', () => json.data.forEach((r) => pm.expect(r.dificultad).to.eql('baja')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtro con valor inválido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas?dificultad=extrema",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ],
+              "query": [
+                {
+                  "key": "dificultad",
+                  "value": "extrema"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Intento de inyección SQL en la búsqueda",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas?busqueda=' OR '1'='1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ],
+              "query": [
+                {
+                  "key": "busqueda",
+                  "value": "' OR '1'='1"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Se trata como texto y no devuelve rutas', () => pm.expect(json.data).to.have.length(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle de una ruta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle de una ruta que no existe",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "99999"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear ruta (administrador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cascada Las Ánimas\",\n  \"descripcion\": \"Sendero junto al río con pozones y una cascada al final.\",\n  \"region\": \"Metropolitana\",\n  \"comuna\": \"San José de Maipo\",\n  \"dificultad\": \"moderada\",\n  \"tipoRuta\": \"cascada\",\n  \"tipoRecorrido\": \"ida_vuelta\",\n  \"distancia\": 8,\n  \"duracion\": 240,\n  \"desnivelPositivo\": 450,\n  \"latitud\": -33.62,\n  \"longitud\": -70.35\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.collectionVariables.set('rutaId', json.data.id_ruta);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear ruta sin ser administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cascada Las Ánimas\",\n  \"descripcion\": \"Sendero junto al río con pozones y una cascada al final.\",\n  \"region\": \"Metropolitana\",\n  \"comuna\": \"San José de Maipo\",\n  \"dificultad\": \"moderada\",\n  \"tipoRuta\": \"cascada\",\n  \"tipoRecorrido\": \"ida_vuelta\",\n  \"distancia\": 8,\n  \"duracion\": 240,\n  \"desnivelPositivo\": 450,\n  \"latitud\": -33.62,\n  \"longitud\": -70.35\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear ruta sin token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cascada Las Ánimas\",\n  \"descripcion\": \"Sendero junto al río con pozones y una cascada al final.\",\n  \"region\": \"Metropolitana\",\n  \"comuna\": \"San José de Maipo\",\n  \"dificultad\": \"moderada\",\n  \"tipoRuta\": \"cascada\",\n  \"tipoRecorrido\": \"ida_vuelta\",\n  \"distancia\": 8,\n  \"duracion\": 240,\n  \"desnivelPositivo\": 450,\n  \"latitud\": -33.62,\n  \"longitud\": -70.35\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear ruta con datos incompletos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ruta sin datos\",\n  \"distancia\": -3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar ruta (administrador)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"distancia\": 8.5,\n  \"duracion\": 255\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Se actualizó la distancia', () => pm.expect(json.data.distancia_km).to.eql(8.5));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar ruta sin campos",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar ruta que no existe",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "99999"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"No existe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Comentarios",
+      "item": [
+        {
+          "name": "Comentarios de una ruta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/1/comentarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "1",
+                "comentarios"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comentar una ruta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}/comentarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaId}}",
+                "comentarios"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"Muy buena ruta, el último tramo tiene harta piedra suelta.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.collectionVariables.set('comentarioId', json.data.id_comentario);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comentario vacío",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}/comentarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaId}}",
+                "comentarios"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar comentario propio",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/comentarios/{{comentarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comentarios",
+                "{{comentarioId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"Muy buena ruta. Ojo con la piedra suelta al final.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar comentario de otra persona",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/comentarios/{{comentarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comentarios",
+                "{{comentarioId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"No es mío\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar comentario de otra persona",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/comentarios/{{comentarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comentarios",
+                "{{comentarioId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar comentario propio",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/comentarios/{{comentarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comentarios",
+                "{{comentarioId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Grupos",
+      "item": [
+        {
+          "name": "Listar grupos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grupos de una ruta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos?rutaId=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos"
+              ],
+              "query": [
+                {
+                  "key": "rutaId",
+                  "value": "2"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Todos son de la ruta 2', () => json.data.forEach((g) => pm.expect(g.ruta_id).to.eql(2)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle de un grupo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle de un grupo que no existe",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "99999"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear grupo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rutaId\": \"{{rutaId}}\",\n  \"nombre\": \"Salida a la cascada\",\n  \"descripcion\": \"Nos juntamos en la plaza de San José.\",\n  \"fechaSalida\": \"{{fechaFutura}}\",\n  \"cupoMaximo\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('El creador es el usuario de la sesión', () => pm.expect(json.data.participantes).to.eql(1));",
+                  "pm.collectionVariables.set('grupoId', json.data.id_grupo);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('fechaFutura', new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 16));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear grupo con fecha pasada y cupo inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rutaId\": 1,\n  \"nombre\": \"Grupo inválido\",\n  \"fechaSalida\": \"2020-01-01T09:00\",\n  \"cupoMaximo\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear grupo en una ruta que no existe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rutaId\": 99999,\n  \"nombre\": \"Ruta fantasma\",\n  \"fechaSalida\": \"{{fechaFutura}}\",\n  \"cupoMaximo\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear grupo sin token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rutaId\": 1,\n  \"nombre\": \"Sin sesión\",\n  \"fechaSalida\": \"{{fechaFutura}}\",\n  \"cupoMaximo\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar grupo propio",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cupoMaximo\": 8\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modificar grupo de otra persona",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cupoMaximo\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Solicitudes a grupos",
+      "item": [
+        {
+          "name": "Solicitar unirse a un grupo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}/solicitudes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}",
+                "solicitudes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Queda pendiente', () => pm.expect(json.data.estado).to.eql('pendiente'));",
+                  "pm.collectionVariables.set('solicitudId', json.data.id_solicitud);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Solicitar dos veces al mismo grupo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}/solicitudes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}",
+                "solicitudes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El creador solicita unirse a su grupo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}/solicitudes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}",
+                "solicitudes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Solicitudes del grupo (creador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}/solicitudes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}",
+                "solicitudes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Solicitudes del grupo sin ser el creador",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}/solicitudes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}",
+                "solicitudes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Responder solicitud sin ser el creador",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}/solicitudes/{{solicitudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}",
+                "solicitudes",
+                "{{solicitudId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aceptada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aceptar solicitud",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}/solicitudes/{{solicitudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}",
+                "solicitudes",
+                "{{solicitudId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aceptada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Responder una solicitud ya respondida",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}/solicitudes/{{solicitudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}",
+                "solicitudes",
+                "{{solicitudId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"rechazada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Participantes del grupo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Ahora tiene 2 participantes', () => pm.expect(json.data.participantes).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mis solicitudes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "solicitudes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Aparece la solicitud aceptada', () => pm.expect(json.data.some((s) => s.estado === 'aceptada')).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Salir del grupo (eliminar solicitud propia)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}/solicitudes/{{solicitudId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}",
+                "solicitudes",
+                "{{solicitudId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Propuestas de rutas",
+      "item": [
+        {
+          "name": "Proponer una ruta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/propuestas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "propuestas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mirador Cerro Pochoco\",\n  \"descripcion\": \"Subida corta con vista a Santiago, ideal al atardecer.\",\n  \"region\": \"Metropolitana\",\n  \"comuna\": \"Lo Barnechea\",\n  \"dificultad\": \"moderada\",\n  \"tipoRecorrido\": \"ida_vuelta\",\n  \"distancia\": 7,\n  \"duracion\": 210\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Queda pendiente', () => pm.expect(json.data.estado).to.eql('pendiente'));",
+                  "pm.collectionVariables.set('propuestaId', json.data.id_propuesta);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Proponer con datos incompletos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/propuestas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "propuestas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Incompleta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mis propuestas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/propuestas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "propuestas"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Solo ve sus propias propuestas', () => json.data.forEach((p) => pm.expect(p.id_propuesta).to.be.a('number')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Propuestas pendientes (administrador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/propuestas?estado=pendiente",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "propuestas"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "pendiente"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Todas están pendientes', () => json.data.forEach((p) => pm.expect(p.estado).to.eql('pendiente')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ver propuesta de otra persona",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/propuestas/{{propuestaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "propuestas",
+                "{{propuestaId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revisar propuesta sin ser administrador",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/propuestas/{{propuestaId}}/revision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "propuestas",
+                "{{propuestaId}}",
+                "revision"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aprobada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aprobar propuesta (administrador)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/propuestas/{{propuestaId}}/revision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "propuestas",
+                "{{propuestaId}}",
+                "revision"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aprobada\",\n  \"tipoRuta\": \"mirador\",\n  \"observaciones\": \"Bien documentada.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Se publicó como ruta', () => pm.expect(json.data.ruta_aprobada_id).to.be.a('number'));",
+                  "pm.collectionVariables.set('rutaAprobadaId', json.data.ruta_aprobada_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revisar una propuesta ya revisada",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/propuestas/{{propuestaId}}/revision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "propuestas",
+                "{{propuestaId}}",
+                "revision"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"rechazada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "La ruta aprobada ya es pública",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaAprobadaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaAprobadaId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar propuesta ya revisada",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/propuestas/{{propuestaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "propuestas",
+                "{{propuestaId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Publicaciones",
+      "item": [
+        {
+          "name": "Ver publicaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ver publicaciones sin token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Publicar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"Hoy hicimos La Campana con el grupo, muy recomendable.\",\n  \"tipo\": \"experiencia\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.collectionVariables.set('publicacionId', json.data.id_publicacion);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Publicación vacía",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar publicación de otra persona",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar publicación propia",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9. Amistades",
+      "item": [
+        {
+          "name": "Enviar solicitud de amistad",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/amistades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "amistades"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{otroId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.collectionVariables.set('amistadId', json.data.id_amistad);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Enviar solicitud repetida",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/amistades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "amistades"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{otroId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Enviarse una solicitud a sí mismo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/amistades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "amistades"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{otroId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Solicitud a un usuario que no existe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/amistades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "amistades"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 99999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Solicitudes recibidas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/amistades/solicitudes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "amistades",
+                "solicitudes"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Aparece la solicitud recibida', () => pm.expect(json.data.some((a) => a.id_amistad === pm.collectionVariables.get('amistadId'))).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Responder una solicitud enviada por uno mismo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/amistades/{{amistadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "amistades",
+                "{{amistadId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aceptada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aceptar solicitud de amistad",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/amistades/{{amistadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "amistades",
+                "{{amistadId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aceptada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Responder una solicitud ya respondida",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/amistades/{{amistadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "amistades",
+                "{{amistadId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"rechazada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lista de amigos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/amistades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "amistades"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('Tiene un amigo', () => pm.expect(json.data).to.have.length(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar amistad",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/amistades/{{amistadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "amistades",
+                "{{amistadId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10. Eliminar",
+      "item": [
+        {
+          "name": "Eliminar grupo de otra persona",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar grupo propio",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El grupo ya no existe",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos/{{grupoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos",
+                "{{grupoId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar ruta con grupos asociados",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "2"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar ruta sin ser administrador",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar ruta (administrador)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar ruta que ya no existe",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "{{rutaId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11. Errores generales",
+      "item": [
+        {
+          "name": "JSON mal escrito",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Endpoint que no existe",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/no-existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "no-existe"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

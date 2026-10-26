@@ -1,4 +1,4 @@
-const { param } = require('express-validator');
+const { param, body } = require('express-validator');
 
 // :id de la URL debe ser un entero positivo. toInt() deja el número ya convertido.
 function idParam(nombre = 'id') {
@@ -8,4 +8,8 @@ function idParam(nombre = 'id') {
     .toInt();
 }
 
-module.exports = { idParam };
+function obligatorios(...campos) {
+  return campos.map((campo) => body(campo).exists({ values: 'falsy' }).withMessage('Es obligatorio'));
+}
+
+module.exports = { idParam, obligatorios };

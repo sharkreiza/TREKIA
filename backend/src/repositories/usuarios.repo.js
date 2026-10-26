@@ -32,4 +32,28 @@ async function crear({ nombre, correo, passwordHash }) {
   return rows[0];
 }
 
-module.exports = { buscarPorId, buscarCredenciales, crear };
+async function actualizar(id, cambios) {
+  const columnas = { nombre: 'nombre', ubicacion: 'ubicacion', biografia: 'biografia' };
+  const sets = [];
+  const valores = [];
+
+  for (const [clave, columna] of Object.entries(columnas)) {
+    if (cambios[clave] !== undefined) {
+      valores.push(cambios[clave]);
+      sets.push(`${columna} = $${valores.length}`);
+    }
+  }
+
+  if (sets.length === 0) return undefined;
+
+  valores.push(id);
+  const { rows } = await pool.query(
+    `UPDATE usuarios SET ${sets.join(', ')}
+     WHERE id_usuario = $${valores.length}
+     RETURNING ${USUARIO_COLUMNAS_PUBLICAS}`,
+    valores,
+  );
+  return rows[0] || null;
+}
+
+module.exports = { buscarPorId, buscarCredenciales, crear, actualizar };

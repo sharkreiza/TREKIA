@@ -85,6 +85,75 @@ const RUTA_ACTUALIZABLES = {
   visibilidad: 'visibilidad',
 };
 
+const GRUPO_COLUMNAS_PUBLICAS = [
+  'g.id_grupo',
+  'g.creador_id',
+  'g.ruta_id',
+  'r.nombre AS ruta_nombre',
+  'g.nombre',
+  'g.descripcion',
+  'g.fecha_salida',
+  'g.cupo_maximo',
+  'g.dificultad',
+  'g.estado',
+  'g.fecha_creacion',
+].join(', ');
+
+const GRUPO_FILTROS_IGUALDAD = {
+  rutaId: 'g.ruta_id',
+  creadorId: 'g.creador_id',
+  estado: 'g.estado',
+};
+
+const GRUPO_ACTUALIZABLES = {
+  nombre: 'nombre',
+  descripcion: 'descripcion',
+  fechaSalida: 'fecha_salida',
+  cupoMaximo: 'cupo_maximo',
+  estado: 'estado',
+};
+
+const PROPUESTA_COLUMNAS_PUBLICAS = [
+  'p.id_propuesta',
+  'p.usuario_id',
+  'u.nombre AS autor',
+  'p.nombre',
+  'p.descripcion',
+  'p.region',
+  'p.comuna',
+  'p.latitud',
+  'p.longitud',
+  'p.dificultad',
+  'p.distancia_km',
+  'p.desnivel_positivo_m',
+  'p.desnivel_negativo_m',
+  'p.duracion_minutos',
+  'p.tipo_ruta AS tipo_recorrido',
+  'p.visibilidad',
+  'p.estado',
+  'p.observaciones_admin',
+  'p.revisado_por',
+  'p.ruta_aprobada_id',
+  'p.fecha_propuesta',
+  'p.fecha_revision',
+].join(', ');
+
+const PROPUESTA_CAMPOS = {
+  nombre: 'nombre',
+  descripcion: 'descripcion',
+  region: 'region',
+  comuna: 'comuna',
+  latitud: 'latitud',
+  longitud: 'longitud',
+  dificultad: 'dificultad',
+  distancia: 'distancia_km',
+  desnivelPositivo: 'desnivel_positivo_m',
+  desnivelNegativo: 'desnivel_negativo_m',
+  duracion: 'duracion_minutos',
+  tipoRecorrido: 'tipo_ruta',
+  visibilidad: 'visibilidad',
+};
+
 module.exports = {
   USUARIO_COLUMNAS_PUBLICAS,
   RUTA_COLUMNAS_PUBLICAS,
@@ -93,4 +162,9 @@ module.exports = {
   RUTA_COLUMNAS_BUSQUEDA,
   RUTA_ORDEN,
   RUTA_ACTUALIZABLES,
+  GRUPO_COLUMNAS_PUBLICAS,
+  GRUPO_FILTROS_IGUALDAD,
+  GRUPO_ACTUALIZABLES,
+  PROPUESTA_COLUMNAS_PUBLICAS,
+  PROPUESTA_CAMPOS,
 };

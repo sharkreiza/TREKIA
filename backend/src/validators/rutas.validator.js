@@ -1,5 +1,5 @@
 const { query, body } = require('express-validator');
-const { idParam } = require('./comun.validator');
+const { idParam, obligatorios } = require('./comun.validator');
 const { RUTA_ORDEN } = require('../db/columnas');
 
 // Valores de los ENUM de la base de datos (database/trekia_schema.sql)
@@ -35,8 +35,7 @@ const listarRules = [
 const obtenerRules = [idParam()];
 
 // Los límites siguen los tipos y CHECK de la tabla rutas.
-const actualizarRules = [
-  idParam(),
+const camposRuta = [
   texto(body('nombre'), 150),
   texto(body('descripcion'), 5000),
   texto(body('region'), 100),
@@ -53,4 +52,11 @@ const actualizarRules = [
   enumerado(body('visibilidad'), VISIBILIDADES),
 ];
 
-module.exports = { listarRules, obtenerRules, actualizarRules };
+const crearRules = [
+  ...obligatorios('nombre', 'descripcion', 'region', 'comuna', 'dificultad', 'tipoRuta'),
+  ...camposRuta,
+];
+
+const actualizarRules = [idParam(), ...camposRuta];
+
+module.exports = { listarRules, obtenerRules, crearRules, actualizarRules, camposRuta };

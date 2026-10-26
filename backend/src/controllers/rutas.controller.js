@@ -28,4 +28,17 @@ async function actualizar(req, res) {
   return ok(res, ruta, 'Ruta actualizada');
 }
 
-module.exports = { listar, obtener, actualizar };
+async function crear(req, res) {
+  const ruta = await rutasRepo.crear(req.usuario.id, req.valid);
+  return ok(res, ruta, 'Ruta creada', 201);
+}
+
+async function eliminar(req, res) {
+  const eliminada = await rutasRepo.eliminar(req.valid.id);
+  if (!eliminada) {
+    throw new HttpError(404, 'Ruta no encontrada');
+  }
+  return ok(res, null, 'Ruta eliminada');
+}
+
+module.exports = { listar, obtener, crear, actualizar, eliminar };
