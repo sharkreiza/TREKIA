@@ -6,8 +6,9 @@
 }
 
 .cuenta-cabecera {
+  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   margin-top: -40px;
   padding: 0 16px;
@@ -27,7 +28,7 @@
 }
 
 .cuenta-nombre {
-  margin: 0;
+  margin: 48px 0 0;
   font-size: 24px;
 }
 
