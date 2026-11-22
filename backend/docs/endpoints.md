@@ -45,8 +45,11 @@ El token dura lo que indique `JWT_EXPIRES_IN` (2 horas por defecto). El rol (`us
 | 413 | El cuerpo de la petición supera los 10 kB |
 | 429 | Demasiados intentos de inicio de sesión o registro |
 | 500 | Error interno; el detalle solo queda en la consola del servidor |
+| 502 / 503 | El servicio externo del clima (Open-Meteo) respondió con error o no está disponible |
 
 Todo `:id` de la URL debe ser un entero positivo; si no, se responde 400.
+
+Antes de validar, la API quita las etiquetas HTML y los caracteres de control de todos los textos del cuerpo (protección contra XSS). Por ejemplo, `"Hola <script>alert(1)</script>"` se guarda como `"Hola alert(1)"`. La contraseña no se modifica.
 
 ---
 
@@ -114,7 +117,7 @@ Perfil público de un usuario. **Con sesión.**
 
 | Respuesta | Caso |
 |---|---|
-| `200` | Devuelve `id_usuario`, `nombre`, `correo`, `rol`, `ubicacion`, `biografia`, fotos y `fecha_creacion` |
+| `200` | Devuelve `id_usuario`, `nombre`, `rol`, `ubicacion`, `biografia`, fotos y `fecha_creacion`. No incluye los correos ni la zona horaria |
 | `400` | Id inválido |
 | `401` | Sin sesión |
 | `404` | El usuario no existe |
@@ -127,15 +130,19 @@ Edita el perfil del usuario de la sesión. **Con sesión.** Todos los campos son
 | `nombre` | texto | Entre 2 y 100 caracteres |
 | `ubicacion` | texto | Máximo 120 caracteres |
 | `biografia` | texto | Máximo 500 caracteres |
+| `correoAdicional` | texto | Correo válido de hasta 150 caracteres, distinto al principal. `""` lo elimina |
+| `zonaHoraria` | texto | Zona horaria IANA, por ejemplo `America/Santiago`, `America/Punta_Arenas` o `Pacific/Easter` |
 
 ```json
-{ "ubicacion": "Valparaíso, Chile", "biografia": "Me gustan las rutas de cordillera." }
+{ "ubicacion": "Valparaíso, Chile", "correoAdicional": "respaldo@gmail.com", "zonaHoraria": "America/Santiago" }
 ```
+
+`GET /auth/me` y esta respuesta incluyen `correo_adicional` y `zona_horaria`.
 
 | Respuesta | Caso |
 |---|---|
 | `200` | Devuelve el perfil actualizado |
-| `400` | Datos inválidos o no se envió ningún campo |
+| `400` | Datos inválidos, correo adicional igual al principal o no se envió ningún campo |
 | `401` | Sin sesión |
 
 ---
@@ -167,6 +174,34 @@ Ejemplo: `GET /rutas?dificultad=baja&orden=distancia&direccion=desc`
 |---|---|
 | `200` | Lista de rutas |
 | `400` | Algún parámetro tiene un valor no permitido |
+
+### `GET /rutas/:id/clima`
+Pronóstico del tiempo en las coordenadas de la ruta, obtenido de [Open-Meteo](https://open-meteo.com/). **Público.** La respuesta se guarda en caché 30 minutos por ruta (`CLIMA_CACHE_MINUTOS`).
+
+| Parámetro | Ejemplo | Descripción |
+|---|---|---|
+| `dias` | `7` | Días de pronóstico, entre 1 y 16 (por defecto 7) |
+
+```json
+{
+  "ruta_id": 1,
+  "fuente": "Open-Meteo",
+  "dias": [
+    { "fecha": "2026-12-06", "codigo": 2, "descripcion": "Parcialmente nublado", "temperatura_max": 27.1,
+      "temperatura_min": 9.4, "probabilidad_lluvia": 5, "viento_max": 18.7 }
+  ]
+}
+```
+
+Las temperaturas están en °C, la probabilidad de lluvia en % y el viento en km/h.
+
+| Respuesta | Caso |
+|---|---|
+| `200` | Pronóstico por día |
+| `400` | `dias` fuera de rango |
+| `404` | La ruta no existe o no tiene coordenadas |
+| `502` | Open-Meteo respondió con error o con un formato inesperado |
+| `503` | No se pudo conectar con Open-Meteo (sin conexión o se superó `CLIMA_TIMEOUT_MS`) |
 
 ### `GET /rutas/:id`
 Detalle de una ruta. **Público.**
@@ -240,7 +275,7 @@ Elimina una ruta. **Administrador.**
 ## Comentarios
 
 ### `GET /rutas/:id/comentarios`
-Comentarios de una ruta, del más nuevo al más antiguo. **Público.** Cada comentario trae el nombre del `autor`.
+Comentarios de una ruta, del más nuevo al más antiguo. **Público.** Cada comentario trae el nombre del `autor`. Acepta `limite` (1 a 100, por defecto 20) y `pagina`.
 
 | Respuesta | Caso |
 |---|---|
@@ -297,7 +332,13 @@ Lista los grupos, ordenados por fecha de salida. **Público.**
 | `creadorId` | `1` | Grupos creados por un usuario |
 | `estado` | `abierto` | `abierto`, `cerrado` o `cancelado` |
 | `desde` | `2026-11-01` | Grupos que salen desde esa fecha |
+| `hasta` | `2026-11-30` | Grupos que salen hasta esa fecha (incluida) |
+| `horario` | `manana` | `manana` (antes de las 12:00), `tarde` (12:00 a 17:59) o `noche` (desde las 18:00) |
+| `cupoMax` | `8` | Grupos de hasta esa cantidad de participantes (entre 2 y 50) |
+| `conCupos` | `true` | Solo grupos que todavía tienen cupos disponibles |
 | `limite` / `pagina` | `20` / `1` | Paginación |
+
+Ejemplo: `GET /grupos?desde=2026-12-01&horario=manana&conCupos=true`
 
 | Respuesta | Caso |
 |---|---|
@@ -502,7 +543,7 @@ Elimina una propuesta. **El autor (solo si está pendiente) o un administrador.*
 ## Publicaciones
 
 ### `GET /publicaciones`
-Últimas 50 publicaciones públicas de la comunidad (y las propias), de la más nueva a la más antigua, con el nombre del `autor`. **Con sesión.**
+Publicaciones públicas de la comunidad (y las propias), de la más nueva a la más antigua, con el nombre del `autor`. **Con sesión.** Acepta `limite` (1 a 50, por defecto 20) y `pagina`.
 
 | Respuesta | Caso |
 |---|---|
@@ -594,3 +635,58 @@ Cancela una solicitud o elimina una amistad. **Cualquiera de los dos usuarios.**
 | `200` | Amistad eliminada |
 | `401` | Sin sesión |
 | `404` | No existe o el usuario no participa en ella |
+
+---
+
+## Notificaciones
+
+La API crea las notificaciones sola cuando pasa algo que le interesa al usuario. Cada notificación trae `tipo`, `mensaje`, `enlace` (la pantalla de la app a la que lleva), `leida` y `fecha_creacion`.
+
+| Tipo | Cuándo se crea | Quién la recibe |
+|---|---|---|
+| `solicitud_grupo` | Alguien pide unirse a un grupo | El creador del grupo |
+| `respuesta_grupo` | El creador acepta o rechaza una solicitud | Quien pidió unirse |
+| `grupo_cancelado` | El creador cambia el grupo a `cancelado` | Los participantes aceptados |
+| `amistad` | Alguien envía una solicitud de amistad | El destinatario |
+| `respuesta_amistad` | Se acepta una solicitud de amistad | Quien la envió |
+| `propuesta` | El administrador aprueba o rechaza una propuesta | El autor de la propuesta |
+
+Todos los endpoints son **Con sesión** y cada usuario solo ve y modifica sus propias notificaciones.
+
+### `GET /notificaciones`
+Notificaciones del usuario, de la más nueva a la más antigua.
+
+| Parámetro | Ejemplo | Descripción |
+|---|---|---|
+| `soloNoLeidas` | `true` | Solo las que no se han leído |
+| `limite` / `pagina` | `20` / `1` | Paginación (límite entre 1 y 50) |
+
+| Respuesta | Caso |
+|---|---|
+| `200` | Lista de notificaciones |
+| `400` | Algún parámetro es inválido |
+| `401` | Sin sesión |
+
+### `GET /notificaciones/no-leidas`
+Cantidad de notificaciones sin leer, para el contador de la campana: `{ "total": 2 }`.
+
+### `PATCH /notificaciones/leidas`
+Marca todas las notificaciones como leídas. Devuelve `{ "actualizadas": 2 }`.
+
+### `PATCH /notificaciones/:id`
+Marca una notificación como leída.
+
+| Respuesta | Caso |
+|---|---|
+| `200` | Devuelve la notificación con `leida: true` |
+| `401` | Sin sesión |
+| `404` | No existe o es de otro usuario |
+
+### `DELETE /notificaciones/:id`
+Elimina una notificación.
+
+| Respuesta | Caso |
+|---|---|
+| `200` | Notificación eliminada |
+| `401` | Sin sesión |
+| `404` | No existe o es de otro usuario |

@@ -10,11 +10,11 @@ API REST de Trekia, construida con **Node.js + Express** y **PostgreSQL**. La in
 
 ## Integrantes y responsabilidades
 
-| Integrante | Responsabilidades (EP2) |
+| Integrante | Responsabilidades (EP2 y Entrega Final) |
 |---|---|
 | Antonia Albar | _por definir_ |
 | Vicente Girardin | _EP 2.6: validación de usuarios y manejo de sesiones_ |
-| Camila Ramirez | _EP 2.1: servidor backend · EP 2.3: API REST y CRUD · EP 2.7: pruebas en Postman y documentación de endpoints_ |
+| Camila Ramirez | _EP 2.1: servidor backend · EP 2.3: API REST y CRUD · EP 2.7: pruebas en Postman y documentación de endpoints · EF: notificaciones, integración con Open-Meteo, sanitización XSS, índices, paginación y Docker_ |
 
 ## Tecnologías
 
@@ -26,17 +26,19 @@ API REST de Trekia, construida con **Node.js + Express** y **PostgreSQL**. La in
 | Validación | express-validator |
 | Contraseñas | bcrypt |
 | Sesiones | JWT (jsonwebtoken) |
-| Seguridad HTTP | helmet, cors, express-rate-limit |
+| Seguridad HTTP | helmet, cors, express-rate-limit, sanitización de HTML propia (XSS) |
+| Servicio externo | [Open-Meteo](https://open-meteo.com/) para el pronóstico del tiempo (con `fetch` de Node) |
 | Variables de entorno | dotenv |
+| Contenedores | Docker (`node:22-slim`) |
 
 ## Instalación
 
-Requisitos: [Node.js](https://nodejs.org/) 18 o superior, [PostgreSQL](https://www.postgresql.org/) y [Git](https://git-scm.com/).
+Requisitos: [Node.js](https://nodejs.org/) 18 o superior, [PostgreSQL](https://www.postgresql.org/) 17 o superior y [Git](https://git-scm.com/).
 
 ```bash
 git clone https://github.com/sharkreiza/TREKIA.git
 cd TREKIA
-git checkout backend
+git checkout Backend
 cd backend
 npm install
 cp .env.example .env
@@ -50,6 +52,12 @@ La base de datos se crea con el esquema de `backend/database/trekia_schema.sql` 
 createdb -U postgres trekia
 psql -U postgres -d trekia -f database/trekia_schema.sql
 psql -U postgres -d trekia -f database/datos_prueba.sql
+```
+
+Si la base de datos ya estaba creada con el esquema de la EP2, basta con aplicar los cambios de la Entrega Final (se puede ejecutar más de una vez):
+
+```bash
+psql -U postgres -d trekia -f database/migracion_ef.sql
 ```
 
 Usuarios de prueba:
@@ -72,6 +80,9 @@ Si falta una variable obligatoria, el servidor no arranca y muestra solo su nomb
 | `JWT_EXPIRES_IN` | Duración de la sesión (por defecto `2h`) | No |
 | `BCRYPT_ROUNDS` | Costo de bcrypt (por defecto `12`) | No |
 | `CORS_ORIGINS` | Orígenes del frontend permitidos, separados por coma | Sí |
+| `CLIMA_API_URL` | URL del pronóstico de Open-Meteo (por defecto `https://api.open-meteo.com/v1/forecast`) | No |
+| `CLIMA_TIMEOUT_MS` | Tiempo máximo de espera de Open-Meteo en milisegundos (por defecto `5000`) | No |
+| `CLIMA_CACHE_MINUTOS` | Minutos que se guarda el pronóstico de cada ruta (por defecto `30`) | No |
 
 El archivo `.env` no se sube al repositorio; solo se versiona `.env.example`.
 
@@ -88,15 +99,18 @@ Para comprobar que funciona, abrir `http://localhost:3000/api/salud` en el naveg
 
 ```
 backend/
+├── Dockerfile
 ├── .env.example
 ├── package.json
 ├── database/
 │   ├── trekia_schema.sql        Esquema de la base de datos
+│   ├── migracion_ef.sql         Cambios de la Entrega Final para una base ya creada
 │   └── datos_prueba.sql         Usuarios, rutas, grupos, propuestas, publicaciones y amistades de prueba
 ├── docs/
 │   ├── EP2.6-informe.md         Explicación de la EP 2.6 (seguridad y sesiones)
 │   ├── endpoints.md             Documentación completa de los endpoints
 │   ├── EP2.7-pruebas.md         Cómo ejecutar las pruebas y resultados
+│   ├── EF-informe.md            Explicación de la Entrega Final (seguridad, optimización, servicio externo)
 │   ├── Trekia.postman_collection.json   Colección de Postman
 │   └── evidencia/               Reporte y captura de la ejecución de las pruebas
 └── src/
@@ -104,12 +118,13 @@ backend/
     ├── app.js             Configura Express (helmet, CORS, JSON, rutas, errores)
     ├── config/            Variables de entorno y CORS
     ├── db/                Conexión a PostgreSQL y listas blancas de columnas
+    ├── integraciones/     Cliente de Open-Meteo (pronóstico del tiempo)
     ├── routes/            Asocian cada URL con sus validaciones y controlador
     ├── validators/        Reglas de express-validator
     ├── controllers/       Leen la petición y responden
     ├── repositories/      Consultas SQL parametrizadas
-    ├── middlewares/       Validación, JWT, rate limit y errores
-    ├── utils/             Formato de respuesta y utilidades
+    ├── middlewares/       Validación, JWT, rate limit, sanitización XSS y errores
+    ├── utils/             Formato de respuesta, permisos y creación de notificaciones
     └── seguridad/         Ejemplo de inyección SQL (para el informe)
 ```
 
@@ -129,6 +144,7 @@ La documentación completa (parámetros, cuerpo, permisos, respuestas y errores 
 | PATCH | `/api/usuarios/me` | Edita el perfil propio | Con sesión |
 | GET | `/api/rutas` | Lista las rutas públicas, con filtros, orden y paginación | Público |
 | GET | `/api/rutas/:id` | Detalle de una ruta | Público |
+| GET | `/api/rutas/:id/clima` | Pronóstico del tiempo de la ruta (Open-Meteo) | Público |
 | POST | `/api/rutas` | Crea una ruta | Administrador |
 | PATCH | `/api/rutas/:id` | Modifica una ruta | Administrador |
 | DELETE | `/api/rutas/:id` | Elimina una ruta sin grupos ni comentarios | Administrador |
@@ -136,7 +152,7 @@ La documentación completa (parámetros, cuerpo, permisos, respuestas y errores 
 | POST | `/api/rutas/:id/comentarios` | Comenta una ruta | Con sesión |
 | PATCH | `/api/comentarios/:id` | Edita un comentario | Autor |
 | DELETE | `/api/comentarios/:id` | Elimina un comentario | Autor o administrador |
-| GET | `/api/grupos` | Lista los grupos, con filtros y paginación | Público |
+| GET | `/api/grupos` | Lista los grupos, con filtros por ruta, fechas, horario, tamaño y cupos, y paginación | Público |
 | GET | `/api/grupos/:id` | Detalle de un grupo con sus participantes | Público |
 | POST | `/api/grupos` | Crea un grupo | Con sesión |
 | PATCH | `/api/grupos/:id` | Modifica un grupo | Creador o administrador |
@@ -159,6 +175,11 @@ La documentación completa (parámetros, cuerpo, permisos, respuestas y errores 
 | POST | `/api/amistades` | Envía una solicitud de amistad | Con sesión |
 | PATCH | `/api/amistades/:id` | Acepta o rechaza una solicitud recibida | Destinatario |
 | DELETE | `/api/amistades/:id` | Cancela una solicitud o elimina una amistad | Cualquiera de los dos |
+| GET | `/api/notificaciones` | Notificaciones del usuario (se pueden filtrar las no leídas) | Con sesión |
+| GET | `/api/notificaciones/no-leidas` | Cantidad de notificaciones sin leer | Con sesión |
+| PATCH | `/api/notificaciones/leidas` | Marca todas como leídas | Con sesión |
+| PATCH | `/api/notificaciones/:id` | Marca una como leída | Dueño |
+| DELETE | `/api/notificaciones/:id` | Elimina una notificación | Dueño |
 
 Las rutas con sesión necesitan el header `Authorization: Bearer <token>`.
 
@@ -166,7 +187,7 @@ Todas las respuestas son JSON con el formato `{ "ok", "data", "message", "errors
 
 ## Pruebas
 
-La colección [`backend/docs/Trekia.postman_collection.json`](backend/docs/Trekia.postman_collection.json) tiene 92 peticiones con 203 verificaciones, que cubren todos los endpoints y sus casos de error. Se importa en Postman y se ejecuta en orden con el Collection Runner, con el servidor encendido y la base de datos recién cargada con `datos_prueba.sql`.
+La colección [`backend/docs/Trekia.postman_collection.json`](backend/docs/Trekia.postman_collection.json) tiene 113 peticiones con 258 verificaciones, que cubren todos los endpoints y sus casos de error. La carpeta **12. Entrega Final** prueba las notificaciones, el correo adicional y la zona horaria, los filtros nuevos de grupos, la sanitización XSS, la paginación y el clima. Se importa en Postman y se ejecuta en orden con el Collection Runner, con el servidor encendido y la base de datos recién cargada con `datos_prueba.sql`.
 
 También se puede ejecutar desde la terminal:
 
@@ -175,3 +196,15 @@ npx newman run docs/Trekia.postman_collection.json
 ```
 
 Los pasos y los resultados están en [`backend/docs/EP2.7-pruebas.md`](backend/docs/EP2.7-pruebas.md), y la evidencia de la ejecución en [`backend/docs/evidencia/`](backend/docs/evidencia/).
+
+## Entrega Final
+
+El detalle de cada punto está en [`backend/docs/EF-informe.md`](backend/docs/EF-informe.md).
+
+| Requisito | Qué se hizo en el backend |
+|---|---|
+| EF 1: funcionalidades completas | Notificaciones (tabla `notificaciones` y CRUD en `/api/notificaciones`), correo adicional y zona horaria del usuario (RF-13), filtros de grupos por horario, rango de fechas, tamaño y cupos (RF-06) |
+| EF 3: seguridad | Sanitización de HTML en todos los textos del cuerpo (`middlewares/sanitizar.js`), perfil público sin correos, `CHECK` para que el correo adicional sea distinto al principal, además de lo de la EP2 (bcrypt, JWT, CORS restringido, helmet, rate limit, consultas parametrizadas) |
+| EF 4: consultas eficientes | 13 índices para las consultas más usadas, paginación en comentarios, publicaciones y notificaciones, conteo de participantes con `JOIN LATERAL` y contador de notificaciones con índice parcial |
+| EF 5: servicio externo | `GET /api/rutas/:id/clima` consulta Open-Meteo con tiempo máximo de espera, caché en memoria y errores 502/503 controlados |
+| EF 6: Docker | `Dockerfile` con `node:22-slim`; el `docker-compose.yml` que une la base de datos, la API y el frontend está en la rama `main` |

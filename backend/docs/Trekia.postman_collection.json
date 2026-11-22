@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Trekia API",
-    "description": "Pruebas de la API REST de Trekia (EP2). Requiere la base de datos con trekia_schema.sql y datos_prueba.sql. Ejecutar en orden con el Collection Runner.",
+    "description": "Pruebas de la API REST de Trekia (EP2 y Entrega Final). Requiere la base de datos con trekia_schema.sql y datos_prueba.sql. Ejecutar en orden con el Collection Runner.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -63,6 +63,10 @@
     },
     {
       "key": "rutaAprobadaId",
+      "value": ""
+    },
+    {
+      "key": "notificacionId",
       "value": ""
     }
   ],
@@ -4443,6 +4447,992 @@
                   "pm.test('Formato { ok, data, message, errors }', () => {",
                   "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
                   "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12. Entrega Final",
+      "item": [
+        {
+          "name": "Notificaciones sin sesión",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Notificaciones del usuario (amistad recibida)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('Devuelve una lista con la solicitud de amistad', () => {",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "  pm.expect(json.data.map((n) => n.tipo)).to.include('amistad');",
+                  "});",
+                  "pm.collectionVariables.set('notificacionId', json.data[0].id_notificacion);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contar notificaciones no leídas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/no-leidas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones",
+                "no-leidas"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('Devuelve el total', () => pm.expect(json.data.total).to.be.a('number').and.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Marcar una notificación como leída",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/{{notificacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones",
+                "{{notificacionId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('Queda leída', () => pm.expect(json.data.leida).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Marcar notificación de otro usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/{{notificacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones",
+                "{{notificacionId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtro soloNoLeidas inválido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones?soloNoLeidas=quizas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones"
+              ],
+              "query": [
+                {
+                  "key": "soloNoLeidas",
+                  "value": "quizas"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Marcar todas como leídas",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/leidas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones",
+                "leidas"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('Indica cuántas actualizó', () => pm.expect(json.data.actualizadas).to.be.a('number'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No quedan notificaciones sin leer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/no-leidas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones",
+                "no-leidas"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('Total en 0', () => pm.expect(json.data.total).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar notificación",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/{{notificacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones",
+                "{{notificacionId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Configurar correo adicional y zona horaria (RF-13)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correoAdicional\": \"respaldo.trekia@gmail.com\",\n  \"zonaHoraria\": \"America/Punta_Arenas\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('Guarda los dos datos', () => {",
+                  "  pm.expect(json.data.correo_adicional).to.eql('respaldo.trekia@gmail.com');",
+                  "  pm.expect(json.data.zona_horaria).to.eql('America/Punta_Arenas');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Correo adicional y zona horaria inválidos",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correoAdicional\": \"sin-arroba\",\n  \"zonaHoraria\": \"Marte/Base\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('Indica los dos campos', () => {",
+                  "  pm.expect(json.errors.map((e) => e.campo)).to.include.members(['correoAdicional', 'zonaHoraria']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Correo adicional igual al principal",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correoAdicional\": \"usuario@gmail.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Perfil de otro usuario no expone correos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{otroId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{otroId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('No incluye correo ni configuración', () => {",
+                  "  pm.expect(json.data).to.not.have.any.keys('correo', 'correo_adicional', 'zona_horaria', 'password_hash');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtrar grupos con cupos y tamaño máximo (RF-06)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos?conCupos=true&cupoMax=8",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos"
+              ],
+              "query": [
+                {
+                  "key": "conCupos",
+                  "value": "true"
+                },
+                {
+                  "key": "cupoMax",
+                  "value": "8"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('Todos tienen cupo y son de máximo 8 personas', () => {",
+                  "  json.data.forEach((g) => {",
+                  "    pm.expect(g.cupo_maximo).to.be.at.most(8);",
+                  "    pm.expect(g.participantes).to.be.below(g.cupo_maximo);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtrar grupos por horario y rango de fechas (RF-06)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos?horario=manana&desde=2026-12-01&hasta=2026-12-31",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos"
+              ],
+              "query": [
+                {
+                  "key": "horario",
+                  "value": "manana"
+                },
+                {
+                  "key": "desde",
+                  "value": "2026-12-01"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-12-31"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('Devuelve una lista', () => pm.expect(json.data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Horario de grupo inválido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/grupos?horario=madrugada",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "grupos"
+              ],
+              "query": [
+                {
+                  "key": "horario",
+                  "value": "madrugada"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Publicación con HTML se guarda sin etiquetas (XSS)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenUsuario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"Gran salida <script>alert('xss')</script><img src=x onerror=alert(1)> al cerro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('No quedan etiquetas HTML', () => {",
+                  "  pm.expect(json.data.contenido).to.not.include('<');",
+                  "  pm.expect(json.data.contenido).to.include('Gran salida');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comentarios paginados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/1/comentarios?limite=1&pagina=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "1",
+                "comentarios"
+              ],
+              "query": [
+                {
+                  "key": "limite",
+                  "value": "1"
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "pm.test('Devuelve como máximo 1', () => pm.expect(json.data.length).to.be.at.most(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clima de una ruta (Open-Meteo)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/1/clima?dias=3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "1",
+                "clima"
+              ],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "3"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 o 503', () => pm.expect([200, 503]).to.include(pm.response.code));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.test('Trae 3 días con temperatura y lluvia', () => {",
+                  "    pm.expect(json.data.fuente).to.eql('Open-Meteo');",
+                  "    pm.expect(json.data.dias).to.have.lengthOf(3);",
+                  "    pm.expect(json.data.dias[0]).to.include.keys('fecha', 'descripcion', 'temperatura_max', 'temperatura_min', 'probabilidad_lluvia');",
+                  "  });",
+                  "} else {",
+                  "  pm.test('Informa que el servicio no está disponible', () => pm.expect(json.ok).to.eql(false));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clima con días fuera de rango",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/1/clima?dias=30",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "1",
+                "clima"
+              ],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "30"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clima de ruta que no existe",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/9999/clima",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rutas",
+                "9999",
+                "clima"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
                   "});"
                 ]
               }
