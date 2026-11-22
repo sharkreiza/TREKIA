@@ -1,19 +1,23 @@
- # TREKIA
+# TREKIA
 
 | Recurso | Enlace |
 |---|---|
 | Repositorio | [github.com/sharkreiza/TREKIA](https://github.com/sharkreiza/TREKIA) |
+| Entrega final | Etiqueta [`v1.0.0`](https://github.com/sharkreiza/TREKIA/releases/tag/v1.0.0) |
+| Rama frontend | [frontend](https://github.com/sharkreiza/TREKIA/tree/frontend) |
+| Rama backend | [Backend](https://github.com/sharkreiza/TREKIA/tree/Backend) |
 | Prototipo en Figma | [Ver prototipo](https://www.figma.com/design/2TYPZLo0IrNCWRyVobiGK7/Sin-t%C3%ADtulo) |
 | Informe EP1 | [Ver informe](docs/Informe-EP1.pdf) |
 
+La rama `main` reúne el frontend y el backend para ejecutar todo el sistema con Docker. El desarrollo de cada parte se hace en su rama (`frontend` y `Backend`).
 
 ## Integrantes y responsabilidades
 
 | Integrante | Responsabilidades |
 |---|---|
-| Antonia Albar | _parte 1.1 y 1.2_ |
-| Vicente Girardin | _figma_ |
-| Camila Ramirez | _1.4,1.5,1.6 · EP 2.4 y 2.5: integración con la API, sesión con JWT y roles · EF: notificaciones, almacenamiento local, clima, filtros de grupos, configuración de la cuenta, optimización y Docker_ |
+| Antonia Albar | _EP1: partes 1.1 y 1.2_ |
+| Vicente Girardin | _EP1: Figma · EP 2.6: validación de usuarios y manejo de sesiones_ |
+| Camila Ramirez | _EP1: 1.4, 1.5 y 1.6 · EP 2.1: servidor backend · EP 2.3: API REST y CRUD · EP 2.4 y 2.5: integración con la API, JWT y roles · EP 2.7: pruebas en Postman y documentación de endpoints · EF: notificaciones, almacenamiento local, clima con Open-Meteo, filtros de grupos, configuración de la cuenta, seguridad, optimización y Docker_ |
 
 ## Descripción del sistema
 
@@ -23,7 +27,6 @@ El sistema tiene dos roles:
 
 - **Usuario:** explora rutas, comenta, crea y se une a grupos, agrega amigos, gestiona su perfil y propone rutas nuevas.
 - **Administrador:** revisa las rutas propuestas por los usuarios y decide si se publican o se rechazan.
-
 
 ## Problema que aborda
 
@@ -47,7 +50,6 @@ El problema se divide en tres partes:
 - Permitir que la comunidad proponga rutas nuevas, revisadas por un administrador antes de publicarse.
 - Ofrecer una experiencia coherente tanto en computador como en celular.
 
-
 ## Principales funcionalidades
 
 - Mapa interactivo con marcadores de rutas y filtros.
@@ -60,7 +62,6 @@ El problema se divide en tres partes:
 - Notificaciones dentro de la app cuando alguien pide unirse a tu grupo, responde tu solicitud, te agrega como amigo o se revisa tu propuesta.
 - Pronóstico del tiempo de cada ruta y del día de salida de cada grupo, obtenido de Open-Meteo.
 - Uso sin conexión: las rutas y grupos vistos se guardan en el dispositivo y se muestran si se pierde la conexión.
-
 
 ## Requerimientos funcionales
 
@@ -95,7 +96,6 @@ El problema se divide en tres partes:
 | RNF-07 | Disponibilidad e integridad de datos | Confiabilidad | Las operaciones de modificación y eliminación de datos deberán estar restringidas según el rol y los permisos del usuario. |
 | RNF-08 | Funcionamiento sin conexión | Confiabilidad | Si se pierde la conexión, la aplicación deberá mostrar los últimos datos de rutas y grupos guardados en el dispositivo (hasta 72 horas) e indicar que no están actualizados. |
 
-
 ## Tecnologías y herramientas
 
 | Área | Tecnología |
@@ -104,67 +104,171 @@ El problema se divide en tres partes:
 | Navegación | React Router 6 (`@ionic/react-router`) |
 | Mapa | Leaflet con mapas de OpenStreetMap |
 | Conexión con la API | Axios, con interceptores para el token JWT y el manejo de errores |
-| Servicio externo | [Open-Meteo](https://open-meteo.com/) (pronóstico del tiempo, a través del backend) |
 | Almacenamiento local | `localStorage` (sesión, filtros y datos para usar sin conexión) |
 | Móvil | Capacitor |
-| Build | Vite, con carga diferida de páginas |
-| Pruebas | Vitest y Testing Library (unitarias), Cypress (de punta a punta) |
-| Despliegue | Docker (build con Node y servidor nginx) |
+| Build del frontend | Vite, con carga diferida de páginas |
+| Backend | Node.js + Express 5 (CommonJS) |
+| Base de datos | PostgreSQL con el driver `pg` (sin ORM) |
+| Validación | express-validator |
+| Contraseñas | bcrypt |
+| Sesiones | JWT (jsonwebtoken) |
+| Seguridad HTTP | helmet, cors, express-rate-limit, sanitización de HTML (XSS) |
+| Servicio externo | [Open-Meteo](https://open-meteo.com/) (pronóstico del tiempo) |
+| Pruebas | Postman y Newman (API), Vitest (unitarias), Cypress (de punta a punta) |
+| Contenedores | Docker y Docker Compose (PostgreSQL 18, Node 22, nginx) |
 | Diseño | Figma |
 | Control de versiones | Git y GitHub |
 
-## Instalación y configuración
+## Arquitectura
 
-### Requisitos previos
+La aplicación se ejecuta como tres contenedores definidos en `docker-compose.yml`:
 
-- [Node.js](https://nodejs.org/) (versión LTS)
-- [Git](https://git-scm.com/)
-- Ionic CLI:
-
-```bash
-npm install -g @ionic/cli
+```
+Navegador ──► frontend (nginx :8080) ── archivos de la app Ionic/React
+    │
+    └──────► backend (Express :3000/api) ──► db (PostgreSQL :5432)
+                      │
+                      └──► Open-Meteo (pronóstico del tiempo)
 ```
 
-### Pasos
+| Servicio | Imagen | Puerto en el computador | Qué hace |
+|---|---|---|---|
+| `db` | `postgres:18` | `5433` | Base de datos. La primera vez carga `trekia_schema.sql` y `datos_prueba.sql`. Los datos quedan en el volumen `db_data` |
+| `backend` | `backend/Dockerfile` (Node 22) | `3000` | API REST. Espera a que la base de datos esté lista antes de arrancar |
+| `frontend` | `frontend/Dockerfile` (build con Node, servido con nginx) | `8080` | App compilada con Vite. nginx devuelve `index.html` en cualquier ruta para que funcione la navegación de React, comprime con gzip y agrega headers de seguridad |
 
-1. Clonar el repositorio y cambiarse a la rama `frontend`:
+El navegador llama directamente a la API en `http://localhost:3000/api`, por eso esa dirección se define al construir el frontend (`VITE_API_URL`) y el origen del frontend (`http://localhost:8080`) tiene que estar en `CORS_ORIGINS`. La base de datos y la API usan la zona horaria `America/Santiago`, porque las fechas se guardan sin zona horaria.
+
+## Ejecución con Docker
+
+Requisitos: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (o Docker Engine con el plugin Compose) y [Git](https://git-scm.com/).
+
+1. Clonar el repositorio (la rama `main` es la que tiene el `docker-compose.yml`):
 
 ```bash
 git clone https://github.com/sharkreiza/TREKIA.git
 cd TREKIA
-git checkout frontend
 ```
 
-2. Entrar a la carpeta del proyecto e instalar las dependencias:
-
-```bash
-cd frontend
-npm install
-```
-
-3. (Opcional) Si la API no está en `http://localhost:3000/api`, crear el archivo `.env` a partir del ejemplo y cambiar la dirección:
+2. Crear el archivo `.env` en la raíz a partir del ejemplo y completar `DB_PASSWORD` y `JWT_SECRET`:
 
 ```bash
 cp .env.example .env
 ```
 
-| Variable | Descripción | Valor por defecto |
-|---|---|---|
-| `VITE_API_URL` | Dirección de la API del backend | `http://localhost:3000/api` |
-
-## Ejecución y uso
-
-La aplicación usa los datos reales de la API, así que **primero hay que levantar el backend** (rama [`Backend`](https://github.com/sharkreiza/TREKIA/tree/Backend), con la base de datos creada y `npm run dev`). Luego, para levantar la aplicación en modo desarrollo:
+En Windows (PowerShell): `Copy-Item .env.example .env`. Para generar el `JWT_SECRET`:
 
 ```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+3. Construir y levantar los tres servicios:
+
+```bash
+docker compose up --build
+```
+
+4. Abrir la aplicación en `http://localhost:8080`. La API queda en `http://localhost:3000/api` (para comprobarla: `http://localhost:3000/api/salud`).
+
+Comandos útiles:
+
+| Comando | Para qué |
+|---|---|
+| `docker compose up --build -d` | Levantar en segundo plano |
+| `docker compose ps` | Ver el estado de los servicios (`db` y `backend` muestran `healthy` cuando están listos) |
+| `docker compose logs -f backend` | Ver los registros de la API |
+| `docker compose down` | Detener los servicios (los datos se mantienen) |
+| `docker compose down -v` | Detener y borrar la base de datos; al volver a levantar se cargan de nuevo los datos de prueba |
+
+Para conectarse a la base de datos desde pgAdmin: host `localhost`, puerto `5433`, base `trekia`, usuario y contraseña los del `.env`.
+
+Si se actualiza el esquema de la base de datos (por ejemplo, al pasar de la EP2 a la Entrega Final), hay que ejecutar `docker compose down -v` una vez, porque los scripts de `database/` solo se cargan cuando el volumen está vacío.
+
+### Variables de entorno (`.env` de la raíz)
+
+Si falta `DB_PASSWORD` o `JWT_SECRET`, `docker compose` no arranca y dice cuál falta.
+
+| Variable | Descripción | Valor por defecto |
+|---|---|---|
+| `DB_NAME` | Nombre de la base de datos | `trekia` |
+| `DB_USER` | Usuario de PostgreSQL. Debe ser `postgres`, porque el esquema asigna las tablas a ese usuario | `postgres` |
+| `DB_PASSWORD` | Contraseña de PostgreSQL | Obligatoria |
+| `DB_PORT_HOST` | Puerto del computador donde se publica PostgreSQL (5433 para no chocar con un PostgreSQL instalado) | `5433` |
+| `JWT_SECRET` | Clave para firmar los tokens, de al menos 32 caracteres | Obligatoria |
+| `JWT_EXPIRES_IN` | Duración de la sesión | `2h` |
+| `BCRYPT_ROUNDS` | Costo de bcrypt | `12` |
+| `BACKEND_PORT` | Puerto del computador donde se publica la API | `3000` |
+| `FRONTEND_PORT` | Puerto del computador donde se publica la app | `8080` |
+| `VITE_API_URL` | Dirección de la API que usa el navegador. Se incrusta al construir el frontend: si se cambia, hay que volver a ejecutar `docker compose up --build` | `http://localhost:3000/api` |
+| `CORS_ORIGINS` | Orígenes permitidos por la API, separados por coma. Tiene que incluir la dirección del frontend | `http://localhost:8080` |
+| `CLIMA_API_URL` | URL del pronóstico de Open-Meteo | `https://api.open-meteo.com/v1/forecast` |
+| `CLIMA_TIMEOUT_MS` | Tiempo máximo de espera de Open-Meteo, en milisegundos | `5000` |
+| `CLIMA_CACHE_MINUTOS` | Minutos que se guarda el pronóstico de cada ruta | `30` |
+
+Si se cambia `FRONTEND_PORT` o `BACKEND_PORT`, hay que actualizar también `CORS_ORIGINS` y `VITE_API_URL`.
+
+## Ejecución sin Docker (desarrollo)
+
+Para desarrollar con recarga automática se pueden levantar el backend y el frontend por separado.
+
+Requisitos: [Node.js](https://nodejs.org/) 18 o superior, [PostgreSQL](https://www.postgresql.org/) 17 o superior, [Git](https://git-scm.com/) e Ionic CLI (`npm install -g @ionic/cli`).
+
+### Base de datos
+
+```bash
+createdb -U postgres trekia
+psql -U postgres -d trekia -f backend/database/trekia_schema.sql
+psql -U postgres -d trekia -f backend/database/datos_prueba.sql
+```
+
+Si la base ya estaba creada con el esquema de la EP2: `psql -U postgres -d trekia -f backend/database/migracion_ef.sql`.
+
+### Backend
+
+```bash
+cd backend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+En `backend/.env` hay que completar `DB_USER`, `DB_PASSWORD` y `JWT_SECRET`.
+
+#### Variables del backend (`backend/.env`)
+
+Si falta una variable obligatoria, el servidor no arranca y muestra solo su nombre.
+
+| Variable | Descripción | Obligatoria |
+|---|---|---|
+| `PORT` | Puerto donde escucha la API (por defecto `3000`) | No |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Conexión a PostgreSQL | Sí |
+| `JWT_SECRET` | Clave para firmar los tokens, de al menos 32 caracteres | Sí |
+| `JWT_EXPIRES_IN` | Duración de la sesión (por defecto `2h`) | No |
+| `BCRYPT_ROUNDS` | Costo de bcrypt (por defecto `12`) | No |
+| `CORS_ORIGINS` | Orígenes del frontend permitidos, separados por coma | Sí |
+| `CLIMA_API_URL` | URL del pronóstico de Open-Meteo (por defecto `https://api.open-meteo.com/v1/forecast`) | No |
+| `CLIMA_TIMEOUT_MS` | Tiempo máximo de espera de Open-Meteo en milisegundos (por defecto `5000`) | No |
+| `CLIMA_CACHE_MINUTOS` | Minutos que se guarda el pronóstico de cada ruta (por defecto `30`) | No |
+
+El archivo `.env` no se sube al repositorio; solo se versiona `.env.example`.
+
+### Frontend
+
+En otra terminal:
+
+```bash
+cd frontend
+npm install
 ionic serve
 ```
 
-Se abrirá en el navegador en `http://localhost:8100`. Para ver la versión móvil, achicar la ventana o usar el modo de dispositivo del navegador (F12).
+Se abre en `http://localhost:8100`. Si la API no está en `http://localhost:3000/api`, crear `frontend/.env` a partir de `frontend/.env.example` y cambiar `VITE_API_URL`. Para ver la versión móvil, achicar la ventana o usar el modo de dispositivo del navegador (F12).
+
+## Uso
 
 ### Usuarios de prueba
 
-Vienen en `datos_prueba.sql` del backend. También se puede crear una cuenta nueva desde **Registro**, que queda guardada en la base de datos.
+Vienen en `backend/database/datos_prueba.sql` y se cargan solos al levantar Docker por primera vez. También se puede crear una cuenta nueva desde **Registro**, que queda guardada en la base de datos.
 
 | Rol | Correo | Contraseña |
 |---|---|---|
@@ -188,38 +292,16 @@ Vienen en `datos_prueba.sql` del backend. También se puede crear una cuenta nue
 - En el detalle de una ruta, revisar el pronóstico de los próximos 7 días; en el detalle de un grupo que sale en menos de 16 días, el clima de ese día.
 - Abrir Explorar rutas, activar **Sin conexión** en las herramientas del navegador (F12 → Network → Offline) y recargar la pantalla: se muestran las rutas guardadas con un aviso.
 
-## Conexión con el backend (EP 2.4 y 2.5)
-
-Todas las pantallas leen y guardan los datos en la API REST del backend.
-
-**Consumo de la API (`src/services/api.ts`).** Se usa una instancia de Axios con la dirección de `VITE_API_URL` y dos interceptores:
-
-- **De petición:** agrega el header `Authorization: Bearer <token>` a todas las peticiones cuando hay sesión.
-- **De respuesta:** convierte cualquier error en un `ErrorApi` con el mensaje que manda el backend y los errores de cada campo, para mostrarlos en pantalla. Si no hay conexión, muestra un aviso. Si el backend responde 401 teniendo sesión (token vencido o inválido), cierra la sesión y la app vuelve a `/login`.
-
-Cada sección tiene su servicio (`authService`, `rutasService`, `gruposService`, `propuestasService`, `comunidadService`), que llama a la API y adapta las respuestas a lo que usan las pantallas. Las pantallas cargan los datos con el hook `useDatos` (`src/hooks/useDatos.ts`), que maneja el estado de carga y los errores, y vuelve a pedir los datos cada vez que se entra a la pantalla. El componente `Estado` muestra el indicador de carga o el error con un botón para reintentar.
-
-**Autenticación con JWT y roles.**
-
-- **Registro e inicio de sesión:** los formularios llaman a `/auth/register` y `/auth/login`, y muestran los errores de validación que responde el backend en el campo correspondiente.
-- **Token:** el JWT que devuelve el login se guarda junto con los datos del usuario (`AuthContext`). Al abrir la app se comprueba con `/auth/me` que el token siga siendo válido.
-- **Rutas protegidas:** `RutaPrivada` (`src/routes/Proteccion.tsx`) no deja entrar a `/app` sin sesión, ni a `/admin` sin el rol `administrador`. El menú solo muestra la sección de administración a ese rol.
-- **Roles en la interfaz:** solo el creador de un grupo ve y responde sus solicitudes; solo el autor (o un administrador) puede eliminar sus comentarios y publicaciones.
-
-Las capturas de los flujos funcionando con la API están en `docs/capturas-ep2/`.
-
----
-
 ## Entrega Final
 
 | Requisito | Qué se hizo | Dónde está |
 |---|---|---|
 | EF 1: funcionalidades completas | CRUD completo de rutas, grupos, solicitudes, comentarios, publicaciones, propuestas, amistades y notificaciones. Se implementaron RF-06 y RF-13, que estaban definidos pero no programados. Notificaciones dentro de la app y almacenamiento local para usar sin conexión | `pages/notificaciones/`, `context/NotificacionesContext.tsx`, `utils/almacenLocal.ts`, `hooks/useDatos.ts`, `pages/grupos/Grupos.tsx`, `pages/cuenta/Cuenta.tsx` |
 | EF 2: UI/UX y rendimiento | Campana con contador en el encabezado y en el menú, aviso cuando se trabaja sin conexión, filtros de grupos, validación del correo adicional. Las páginas se cargan por separado (`React.lazy`): el archivo principal bajó de 1.647 kB a 1.415 kB y Leaflet solo se descarga al abrir Inicio. La imagen de portada pasó de 1,4 MB (PNG) a 155 kB (JPG) y se eliminó una imagen sin uso de 640 kB. nginx comprime con gzip y guarda en caché las imágenes por 30 días | `routes/paginaDiferida.tsx`, `nginx.conf`, `public/assets/` |
-| EF 3: seguridad | Además de lo de la EP2 (JWT, rutas protegidas, roles), el backend quita el HTML de todos los textos (XSS) y el perfil de otros usuarios ya no muestra su correo. nginx agrega los headers `X-Content-Type-Options`, `X-Frame-Options` y `Referrer-Policy`. Al cerrar sesión se borran los datos guardados en el dispositivo | Rama `Backend`, `nginx.conf`, `context/AuthContext.tsx` |
-| EF 4: consultas eficientes | Índices en la base de datos, paginación en comentarios, publicaciones y notificaciones, y conteo de participantes con un solo `JOIN LATERAL`. El contador de la campana usa un endpoint que solo devuelve el número | Rama `Backend` |
+| EF 3: seguridad | Además de lo de la EP2 (JWT, rutas protegidas, roles), el backend quita el HTML de todos los textos (XSS) y el perfil de otros usuarios ya no muestra su correo. nginx agrega los headers `X-Content-Type-Options`, `X-Frame-Options` y `Referrer-Policy`. Al cerrar sesión se borran los datos guardados en el dispositivo | `backend/src/middlewares/sanitizar.js`, `frontend/nginx.conf`, `frontend/src/context/AuthContext.tsx` |
+| EF 4: consultas eficientes | Índices en la base de datos, paginación en comentarios, publicaciones y notificaciones, y conteo de participantes con un solo `JOIN LATERAL`. El contador de la campana usa un endpoint que solo devuelve el número | `backend/database/trekia_schema.sql`, `backend/src/repositories/` |
 | EF 5: servicio externo | Pronóstico del tiempo de [Open-Meteo](https://open-meteo.com/). El backend lo consulta, lo guarda 30 minutos en caché y responde 503 si el servicio no está disponible; la app muestra el error sin afectar el resto de la pantalla | `components/Clima.tsx`, `services/climaService.ts` |
-| EF 6: Docker | `Dockerfile` en dos etapas (build con Node, servidor nginx) y `docker-compose.yml` en la rama `main` que levanta la base de datos, la API y el frontend | `Dockerfile`, `nginx.conf` |
+| EF 6: Docker | `Dockerfile` en dos etapas (build con Node, servidor nginx) y `docker-compose.yml` en la rama `main` que levanta la base de datos, la API y el frontend | `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`, `frontend/nginx.conf` |
 
 ### Notificaciones
 
@@ -235,9 +317,11 @@ El backend crea una notificación cada vez que pasa algo que le interesa al usua
 
 Todo se guarda con el prefijo `trekia:` y se borra al cerrar sesión.
 
+El detalle del backend (seguridad, índices, integración con Open-Meteo) está en [`backend/docs/EF-informe.md`](backend/docs/EF-informe.md).
+
 ## Matriz de trazabilidad
 
-Cada requerimiento funcional con la pantalla que lo implementa, el servicio del frontend, el endpoint del backend y la prueba que lo verifica. Las pruebas de Postman están en `backend/docs/Trekia.postman_collection.json` (rama `Backend`) y las de Cypress en `cypress/e2e/trekia.cy.ts`.
+Cada requerimiento funcional con la pantalla que lo implementa, el servicio del frontend, el endpoint del backend y la prueba que lo verifica. Las pantallas están en `frontend/src/`, las pruebas de Postman en `backend/docs/Trekia.postman_collection.json` y las de Cypress en `frontend/cypress/e2e/trekia.cy.ts`.
 
 | RF | Pantalla | Servicio | Endpoint | Prueba |
 |---|---|---|---|---|
@@ -287,29 +371,101 @@ Correcciones respecto de la EP2:
 
 ## Pruebas
 
-```bash
-cd frontend
-npm run test.unit          # Vitest: render de la app, formatos y zona horaria, almacenamiento local
-npm run test.e2e           # Cypress: necesita el backend y la app levantados
-```
+| Tipo | Herramienta | Qué cubre | Cómo ejecutarla |
+|---|---|---|---|
+| API | Postman / Newman | 113 peticiones y 258 verificaciones: todos los endpoints con sus casos de error, más la carpeta **12. Entrega Final** | `cd backend && npx newman run docs/Trekia.postman_collection.json` |
+| Unitarias | Vitest | Render de la app sin sesión, formatos de fecha según la zona horaria, almacenamiento local | `cd frontend && npm run test.unit` |
+| De punta a punta | Cypress | Redirección sin sesión, validación del login, credenciales incorrectas, detalle de ruta con clima, bloqueo de administración, notificaciones, acceso del administrador | `cd frontend && CYPRESS_BASE_URL=http://localhost:8080 npm run test.e2e` |
 
-Cypress usa `http://localhost:5173` (`npm run dev`). Para probar contra Docker: `CYPRESS_BASE_URL=http://localhost:8080 npm run test.e2e`.
+Postman y Cypress necesitan la base de datos recién cargada con `datos_prueba.sql` (con Docker: `docker compose down -v` y `docker compose up`). Los pasos y la evidencia de la API están en [`backend/docs/EP2.7-pruebas.md`](backend/docs/EP2.7-pruebas.md), [`backend/docs/EF-informe.md`](backend/docs/EF-informe.md) y [`backend/docs/evidencia/`](backend/docs/evidencia/).
 
-## Ejecución con Docker
+## Conexión con el backend (EP 2.4 y 2.5)
 
-El frontend tiene su `Dockerfile`: compila la app con Node y la sirve con nginx, que devuelve `index.html` en cualquier ruta para que funcione la navegación de React. La dirección de la API se define al construir la imagen, porque Vite la incrusta en el código:
+Todas las pantallas leen y guardan los datos en la API REST del backend.
 
-```bash
-cd frontend
-docker build --build-arg VITE_API_URL=http://localhost:3000/api -t trekia-frontend .
-docker run -p 8080:80 trekia-frontend
-```
+**Consumo de la API (`src/services/api.ts`).** Se usa una instancia de Axios con la dirección de `VITE_API_URL` y dos interceptores:
 
-Para levantar todo el sistema (base de datos, API y frontend) con un solo comando, usar el `docker-compose.yml` de la rama `main`; las instrucciones están en su README.
+- **De petición:** agrega el header `Authorization: Bearer <token>` a todas las peticiones cuando hay sesión.
+- **De respuesta:** convierte cualquier error en un `ErrorApi` con el mensaje que manda el backend y los errores de cada campo, para mostrarlos en pantalla. Si no hay conexión, muestra un aviso. Si el backend responde 401 teniendo sesión (token vencido o inválido), cierra la sesión y la app vuelve a `/login`.
 
----
+Cada sección tiene su servicio (`authService`, `rutasService`, `gruposService`, `propuestasService`, `comunidadService`), que llama a la API y adapta las respuestas a lo que usan las pantallas. Las pantallas cargan los datos con el hook `useDatos` (`src/hooks/useDatos.ts`), que maneja el estado de carga y los errores, y vuelve a pedir los datos cada vez que se entra a la pantalla. El componente `Estado` muestra el indicador de carga o el error con un botón para reintentar.
+
+**Autenticación con JWT y roles.**
+
+- **Registro e inicio de sesión:** los formularios llaman a `/auth/register` y `/auth/login`, y muestran los errores de validación que responde el backend en el campo correspondiente.
+- **Token:** el JWT que devuelve el login se guarda junto con los datos del usuario (`AuthContext`). Al abrir la app se comprueba con `/auth/me` que el token siga siendo válido.
+- **Rutas protegidas:** `RutaPrivada` (`src/routes/Proteccion.tsx`) no deja entrar a `/app` sin sesión, ni a `/admin` sin el rol `administrador`. El menú solo muestra la sección de administración a ese rol.
+- **Roles en la interfaz:** solo el creador de un grupo ve y responde sus solicitudes; solo el autor (o un administrador) puede eliminar sus comentarios y publicaciones.
+
+Las capturas de los flujos funcionando con la API están en `docs/capturas-ep2/`.
+
+## Endpoints
+
+La documentación completa (parámetros, cuerpo, permisos, respuestas y errores de cada endpoint) está en [`backend/docs/endpoints.md`](backend/docs/endpoints.md).
+
+| Método | Endpoint | Descripción | Acceso |
+|---|---|---|---|
+| GET | `/api/salud` | Comprueba que el servidor funciona | Público |
+| POST | `/api/auth/register` | Registra un usuario (siempre con rol `usuario`) | Público |
+| POST | `/api/auth/login` | Inicia sesión y devuelve un JWT | Público |
+| GET | `/api/auth/me` | Usuario de la sesión actual | Con sesión |
+| GET | `/api/usuarios/:id` | Perfil público de un usuario | Con sesión |
+| PATCH | `/api/usuarios/me` | Edita el perfil propio | Con sesión |
+| GET | `/api/rutas` | Lista las rutas públicas, con filtros, orden y paginación | Público |
+| GET | `/api/rutas/:id` | Detalle de una ruta | Público |
+| GET | `/api/rutas/:id/clima` | Pronóstico del tiempo de la ruta (Open-Meteo) | Público |
+| POST | `/api/rutas` | Crea una ruta | Administrador |
+| PATCH | `/api/rutas/:id` | Modifica una ruta | Administrador |
+| DELETE | `/api/rutas/:id` | Elimina una ruta sin grupos ni comentarios | Administrador |
+| GET | `/api/rutas/:id/comentarios` | Comentarios de una ruta | Público |
+| POST | `/api/rutas/:id/comentarios` | Comenta una ruta | Con sesión |
+| PATCH | `/api/comentarios/:id` | Edita un comentario | Autor |
+| DELETE | `/api/comentarios/:id` | Elimina un comentario | Autor o administrador |
+| GET | `/api/grupos` | Lista los grupos, con filtros por ruta, fechas, horario, tamaño y cupos, y paginación | Público |
+| GET | `/api/grupos/:id` | Detalle de un grupo con sus participantes | Público |
+| POST | `/api/grupos` | Crea un grupo | Con sesión |
+| PATCH | `/api/grupos/:id` | Modifica un grupo | Creador o administrador |
+| DELETE | `/api/grupos/:id` | Elimina un grupo y sus solicitudes | Creador o administrador |
+| GET | `/api/grupos/:id/solicitudes` | Solicitudes recibidas por un grupo | Creador o administrador |
+| POST | `/api/grupos/:id/solicitudes` | Solicita unirse a un grupo | Con sesión |
+| PATCH | `/api/grupos/:id/solicitudes/:solicitudId` | Acepta o rechaza una solicitud | Creador o administrador |
+| DELETE | `/api/grupos/:id/solicitudes/:solicitudId` | Cancela una solicitud o sale del grupo | Solicitante, creador o administrador |
+| GET | `/api/solicitudes` | Solicitudes enviadas por el usuario y su estado | Con sesión |
+| GET | `/api/propuestas` | Propuestas propias (el administrador ve todas) | Con sesión |
+| GET | `/api/propuestas/:id` | Detalle de una propuesta | Autor o administrador |
+| POST | `/api/propuestas` | Propone una ruta nueva | Con sesión |
+| PATCH | `/api/propuestas/:id/revision` | Aprueba o rechaza una propuesta; si se aprueba, se publica como ruta | Administrador |
+| DELETE | `/api/propuestas/:id` | Elimina una propuesta (el autor, solo si está pendiente) | Autor o administrador |
+| GET | `/api/publicaciones` | Publicaciones de la comunidad | Con sesión |
+| POST | `/api/publicaciones` | Publica en la comunidad | Con sesión |
+| DELETE | `/api/publicaciones/:id` | Elimina una publicación | Autor o administrador |
+| GET | `/api/amistades` | Lista de amigos | Con sesión |
+| GET | `/api/amistades/solicitudes` | Solicitudes de amistad recibidas | Con sesión |
+| POST | `/api/amistades` | Envía una solicitud de amistad | Con sesión |
+| PATCH | `/api/amistades/:id` | Acepta o rechaza una solicitud recibida | Destinatario |
+| DELETE | `/api/amistades/:id` | Cancela una solicitud o elimina una amistad | Cualquiera de los dos |
+| GET | `/api/notificaciones` | Notificaciones del usuario (se pueden filtrar las no leídas) | Con sesión |
+| GET | `/api/notificaciones/no-leidas` | Cantidad de notificaciones sin leer | Con sesión |
+| PATCH | `/api/notificaciones/leidas` | Marca todas como leídas | Con sesión |
+| PATCH | `/api/notificaciones/:id` | Marca una como leída | Dueño |
+| DELETE | `/api/notificaciones/:id` | Elimina una notificación | Dueño |
+
+Las rutas con sesión necesitan el header `Authorization: Bearer <token>`.
+
+Todas las respuestas son JSON con el formato `{ "ok", "data", "message", "errors" }`. Cuando falla la validación, `errors` es una lista de `{ "campo", "mensaje" }`.
 
 ## Estructura del proyecto
+
+```
+TREKIA/
+├── docker-compose.yml     Servicios db, backend y frontend
+├── .env.example           Variables para docker compose
+├── docs/                  Informe EP1, diagramas y capturas
+├── frontend/              App Ionic + React (ver abajo)
+└── backend/               API REST Express + PostgreSQL (ver abajo)
+```
+
+### Frontend
 
 ```
 frontend/
@@ -338,7 +494,40 @@ frontend/
     └── App.tsx
 ```
 
----
+### Backend
+
+```
+backend/
+├── Dockerfile
+├── .env.example
+├── package.json
+├── database/
+│   ├── trekia_schema.sql        Esquema de la base de datos
+│   ├── migracion_ef.sql         Cambios de la Entrega Final para una base ya creada
+│   └── datos_prueba.sql         Usuarios, rutas, grupos, propuestas, publicaciones y amistades de prueba
+├── docs/
+│   ├── EP2.6-informe.md         Explicación de la EP 2.6 (seguridad y sesiones)
+│   ├── endpoints.md             Documentación completa de los endpoints
+│   ├── EP2.7-pruebas.md         Cómo ejecutar las pruebas y resultados
+│   ├── EF-informe.md            Explicación de la Entrega Final (seguridad, optimización, servicio externo)
+│   ├── Trekia.postman_collection.json   Colección de Postman
+│   └── evidencia/               Reporte y captura de la ejecución de las pruebas
+└── src/
+    ├── server.js          Levanta el servidor en el puerto
+    ├── app.js             Configura Express (helmet, CORS, JSON, rutas, errores)
+    ├── config/            Variables de entorno y CORS
+    ├── db/                Conexión a PostgreSQL y listas blancas de columnas
+    ├── integraciones/     Cliente de Open-Meteo (pronóstico del tiempo)
+    ├── routes/            Asocian cada URL con sus validaciones y controlador
+    ├── validators/        Reglas de express-validator
+    ├── controllers/       Leen la petición y responden
+    ├── repositories/      Consultas SQL parametrizadas
+    ├── middlewares/       Validación, JWT, rate limit, sanitización XSS y errores
+    ├── utils/             Formato de respuesta, permisos y creación de notificaciones
+    └── seguridad/         Ejemplo de inyección SQL (para el informe)
+```
+
+Una petición pasa por: **ruta → validación → controlador → repositorio → base de datos**. Solo los repositorios escriben SQL.
 
 ## Arquitectura de navegación
 
@@ -405,7 +594,6 @@ frontend/
 
 ![Task flow consultar una ruta](docs/diagramas/taskflow-consultar.png)
 
-
 ## Capturas
 
 | Pantalla | Web |
@@ -415,9 +603,7 @@ frontend/
 | Inicio | ![Inicio web](docs/capturas/inicio-web.png) |
 | Explorar rutas | ![Rutas web](docs/capturas/rutas-web.png) | 
 | Comunidad | ![Comunidad web](docs/capturas/comunidad-web.png) | 
-| Cuenta | ![Cuenta web](docs/capturas/cuenta-web.png) | 
-
----
+| Cuenta | ![Cuenta web](docs/capturas/cuenta-web.png) |
 
 ## Recursos externos
 
