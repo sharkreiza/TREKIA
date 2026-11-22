@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
-  IonButton, IonChip, IonContent, IonIcon, IonInput, IonPage,
-  IonSegment, IonSegmentButton, IonTextarea, useIonToast,
+  IonButton, IonChip, IonContent, IonIcon, IonInput, IonPage, IonSegment,
+  IonSegmentButton, IonSelect, IonSelectOption, IonTextarea, useIonToast,
 } from '@ionic/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { personCircle } from 'ionicons/icons';
@@ -15,7 +15,7 @@ import { enviarSolicitudAmistad } from '../../services/comunidadService';
 import { obtenerGrupos, obtenerMisSolicitudes } from '../../services/gruposService';
 import { obtenerPropuestas } from '../../services/propuestasService';
 import { ErrorApi } from '../../services/api';
-import { capitalizar } from '../../utils/formatos';
+import { capitalizar, zonasHorarias } from '../../utils/formatos';
 import '../inicio/Inicio.css';
 import './Cuenta.css';
 
@@ -70,6 +70,9 @@ export default function Cuenta() {
   const [nombre, setNombre] = useState(user?.nombre ?? '');
   const [ubicacion, setUbicacion] = useState(user?.ubicacion ?? '');
   const [biografia, setBiografia] = useState(user?.biografia ?? '');
+  const [correoAdicional, setCorreoAdicional] = useState(user?.correoAdicional ?? '');
+  const [zonaHoraria, setZonaHoraria] = useState(user?.zonaHoraria ?? 'America/Santiago');
+  const [errores, setErrores] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
 
   const misGrupos = useDatos(() => obtenerGrupos({ creadorId: user?.id }), [], [user?.id]);
@@ -84,13 +87,28 @@ export default function Cuenta() {
 
   async function guardar() {
     setError('');
+    setErrores({});
+
+    const correo = correoAdicional.trim().toLowerCase();
+    if (correo !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+      setErrores({ correoAdicional: 'El correo adicional no tiene un formato válido' });
+      return;
+    }
+    if (correo !== '' && correo === user?.correo) {
+      setErrores({ correoAdicional: 'Debe ser distinto a tu correo principal' });
+      return;
+    }
+
     try {
-      const actualizado = await actualizarPerfil({ nombre, ubicacion, biografia });
+      const actualizado = await actualizarPerfil({ nombre, ubicacion, biografia, correoAdicional: correo, zonaHoraria });
       actualizarUsuario(actualizado);
       mostrarToast({ message: 'Cambios guardados', duration: 2000, color: 'success' });
     } catch (e) {
-      const campos = e instanceof ErrorApi ? Object.values(e.campos) : [];
-      setError(campos.length > 0 ? campos.join('. ') : (e as Error).message);
+      const campos = e instanceof ErrorApi ? e.campos : {};
+      setErrores(campos);
+      if (Object.keys(campos).length === 0) {
+        setError((e as Error).message);
+      }
     }
   }
 
@@ -129,8 +147,16 @@ export default function Cuenta() {
                   <span>{user?.correo}</span>
                 </div>
                 <div className="cuenta-dato">
+                  <span>Correo adicional</span>
+                  <span>{user?.correoAdicional || 'Sin correo adicional'}</span>
+                </div>
+                <div className="cuenta-dato">
                   <span>Ubicación</span>
                   <span>{user?.ubicacion || 'Sin ubicación'}</span>
+                </div>
+                <div className="cuenta-dato">
+                  <span>Zona horaria</span>
+                  <span>{zonasHorarias.find((z) => z.valor === user?.zonaHoraria)?.nombre ?? user?.zonaHoraria}</span>
                 </div>
               </div>
 
@@ -211,13 +237,40 @@ export default function Cuenta() {
           <div className="cuenta-panel ion-margin-top">
             <h2>Configuración de la cuenta</h2>
             <IonInput
-              className="ion-margin-bottom"
+              className={`ion-margin-bottom ${errores.nombre ? 'ion-invalid ion-touched' : ''}`}
               label="Nombre"
               labelPlacement="stacked"
               fill="outline"
               value={nombre}
+              errorText={errores.nombre}
               onIonInput={(e) => setNombre(e.detail.value ?? '')}
             />
+            <IonInput
+              className={`ion-margin-bottom ${errores.correoAdicional ? 'ion-invalid ion-touched' : ''}`}
+              label="Correo adicional (opcional)"
+              labelPlacement="stacked"
+              fill="outline"
+              type="email"
+              inputmode="email"
+              placeholder="Ej: respaldo@gmail.com"
+              helperText="Un segundo correo de contacto. Déjalo vacío para quitarlo."
+              errorText={errores.correoAdicional}
+              value={correoAdicional}
+              onIonInput={(e) => setCorreoAdicional(e.detail.value ?? '')}
+            />
+            <IonSelect
+              className="ion-margin-bottom"
+              label="Zona horaria"
+              labelPlacement="stacked"
+              fill="outline"
+              interface="popover"
+              value={zonaHoraria}
+              onIonChange={(e) => setZonaHoraria(e.detail.value)}
+            >
+              {zonasHorarias.map((zona) => (
+                <IonSelectOption key={zona.valor} value={zona.valor}>{zona.nombre}</IonSelectOption>
+              ))}
+            </IonSelect>
             <IonInput
               className="ion-margin-bottom"
               label="Ubicación"

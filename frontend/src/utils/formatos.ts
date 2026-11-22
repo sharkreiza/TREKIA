@@ -1,21 +1,43 @@
+let zonaHoraria: string | undefined;
+
+export function usarZonaHoraria(zona: string | undefined) {
+  zonaHoraria = zona;
+}
+
+export const zonasHorarias = [
+  { valor: 'America/Santiago', nombre: 'Chile continental (Santiago)' },
+  { valor: 'America/Punta_Arenas', nombre: 'Magallanes (Punta Arenas)' },
+  { valor: 'Pacific/Easter', nombre: 'Isla de Pascua' },
+  { valor: 'America/Argentina/Buenos_Aires', nombre: 'Argentina (Buenos Aires)' },
+  { valor: 'America/Lima', nombre: 'Perú (Lima)' },
+  { valor: 'America/Bogota', nombre: 'Colombia (Bogotá)' },
+  { valor: 'America/Mexico_City', nombre: 'México (Ciudad de México)' },
+  { valor: 'Europe/Madrid', nombre: 'España (Madrid)' },
+  { valor: 'UTC', nombre: 'UTC' },
+];
+
 export function capitalizar(texto: string) {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
 export function formatearFecha(iso: string) {
-  return new Date(iso).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: zonaHoraria });
 }
 
 export function formatearHora(iso: string) {
-  return new Date(iso).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', timeZone: zonaHoraria });
 }
 
 export function diaYMes(iso: string) {
   const fecha = new Date(iso);
   return {
-    dia: String(fecha.getDate()),
-    mes: capitalizar(fecha.toLocaleDateString('es-CL', { month: 'short' }).replace('.', '')),
+    dia: fecha.toLocaleDateString('es-CL', { day: 'numeric', timeZone: zonaHoraria }),
+    mes: capitalizar(fecha.toLocaleDateString('es-CL', { month: 'short', timeZone: zonaHoraria }).replace('.', '')),
   };
+}
+
+export function fechaLocal(iso: string) {
+  return new Date(iso).toLocaleDateString('en-CA', { timeZone: zonaHoraria });
 }
 
 export function haceCuanto(iso: string) {

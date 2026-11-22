@@ -65,7 +65,18 @@ function convertirGrupo(g: GrupoApi): Grupo {
   };
 }
 
-export async function obtenerGrupos(filtros: { rutaId?: number; creadorId?: number; estado?: string; desde?: string } = {}) {
+export interface FiltrosGrupos {
+  rutaId?: number;
+  creadorId?: number;
+  estado?: string;
+  desde?: string;
+  hasta?: string;
+  horario?: string;
+  cupoMax?: number;
+  conCupos?: boolean;
+}
+
+export async function obtenerGrupos(filtros: FiltrosGrupos = {}) {
   const grupos = await obtener<GrupoApi[]>('/grupos', { limite: 100, ...filtros });
   return grupos.map(convertirGrupo);
 }
