@@ -13,7 +13,7 @@
 |---|---|
 | Antonia Albar | _parte 1.1 y 1.2_ |
 | Vicente Girardin | _figma_ |
-| Camila Ramirez | _1.4,1.5,1.6 · EP 2.4 y 2.5: integración con la API, sesión con JWT y roles_ |
+| Camila Ramirez | _1.4,1.5,1.6 · EP 2.4 y 2.5: integración con la API, sesión con JWT y roles · EF: notificaciones, almacenamiento local, clima, filtros de grupos, configuración de la cuenta, optimización y Docker_ |
 
 ## Descripción del sistema
 
@@ -57,6 +57,9 @@ El problema se divide en tres partes:
 - Propuesta de rutas nuevas.
 - Cuenta con perfil, estadísticas y configuración.
 - Panel de administrador para aprobar o rechazar rutas propuestas.
+- Notificaciones dentro de la app cuando alguien pide unirse a tu grupo, responde tu solicitud, te agrega como amigo o se revisa tu propuesta.
+- Pronóstico del tiempo de cada ruta y del día de salida de cada grupo, obtenido de Open-Meteo.
+- Uso sin conexión: las rutas y grupos vistos se guardan en el dispositivo y se muestran si se pierde la conexión.
 
 
 ## Requerimientos funcionales
@@ -64,7 +67,7 @@ El problema se divide en tres partes:
 | ID | Nombre | Rol | Descripción |
 |---|---|---|---|
 | RF-01 | Visualización de rutas en mapa interactivo | Usuario | El sistema deberá permitir visualizar las rutas de trekking disponibles mediante marcadores en un mapa interactivo. |
-| RF-02 | Consulta detallada de una ruta | Usuario | El sistema deberá permitir seleccionar una ruta y consultar su nombre, ubicación, descripción, dificultad, distancia, inclinación, duración estimada y recorrido. |
+| RF-02 | Consulta detallada de una ruta | Usuario | El sistema deberá permitir seleccionar una ruta y consultar su nombre, ubicación, descripción, dificultad, distancia, desnivel, duración estimada y recorrido. |
 | RF-03 | Búsqueda y filtrado de rutas | Usuario | El sistema deberá permitir buscar y filtrar rutas según dificultad, ubicación, distancia y otras características. |
 | RF-04 | Publicación de experiencias y comentarios | Usuario | El sistema deberá permitir publicar comentarios asociados a una ruta para compartir experiencias, recomendaciones y advertencias. |
 | RF-05 | Creación de grupos de trekking | Usuario | El sistema deberá permitir crear grupos indicando ruta, fecha, hora, cantidad de participantes y descripción de la actividad. |
@@ -76,6 +79,8 @@ El problema se divide en tres partes:
 | RF-11 | Añadir amigos | Usuario | El sistema deberá permitir enviar solicitudes de amistad a otros usuarios desde sus perfiles. |
 | RF-12 | Gestión de lista de amigos y solicitudes | Usuario | El sistema deberá permitir ver la lista de amigos y aceptar o rechazar las solicitudes de amistad recibidas. |
 | RF-13 | Configuración de la cuenta | Usuario | El sistema deberá permitir modificar los datos de la cuenta, agregar un correo adicional y seleccionar la zona horaria. |
+| RF-14 | Notificaciones | Usuario y administrador | El sistema deberá avisar al usuario cuando alguien solicite unirse a su grupo, cuando respondan su solicitud, cuando se cancele un grupo al que pertenece, cuando reciba o le acepten una solicitud de amistad y cuando se revise su propuesta de ruta. |
+| RF-15 | Pronóstico del clima | Usuario | El sistema deberá mostrar el pronóstico del tiempo de cada ruta y el del día de salida de cada grupo, obtenido de un servicio externo. |
 
 ## Requerimientos no funcionales
 
@@ -88,6 +93,7 @@ El problema se divide en tres partes:
 | RNF-05 | Diseño responsivo y compatibilidad | Compatibilidad | La aplicación deberá adaptarse a celulares y computadores, manteniendo su funcionalidad y legibilidad. |
 | RNF-06 | Accesibilidad | Accesibilidad | La interfaz deberá usar tamaños de texto, contrastes y etiquetas que faciliten la lectura y la navegación. |
 | RNF-07 | Disponibilidad e integridad de datos | Confiabilidad | Las operaciones de modificación y eliminación de datos deberán estar restringidas según el rol y los permisos del usuario. |
+| RNF-08 | Funcionamiento sin conexión | Confiabilidad | Si se pierde la conexión, la aplicación deberá mostrar los últimos datos de rutas y grupos guardados en el dispositivo (hasta 72 horas) e indicar que no están actualizados. |
 
 
 ## Tecnologías y herramientas
@@ -98,8 +104,12 @@ El problema se divide en tres partes:
 | Navegación | React Router 6 (`@ionic/react-router`) |
 | Mapa | Leaflet con mapas de OpenStreetMap |
 | Conexión con la API | Axios, con interceptores para el token JWT y el manejo de errores |
+| Servicio externo | [Open-Meteo](https://open-meteo.com/) (pronóstico del tiempo, a través del backend) |
+| Almacenamiento local | `localStorage` (sesión, filtros y datos para usar sin conexión) |
 | Móvil | Capacitor |
-| Build | Vite |
+| Build | Vite, con carga diferida de páginas |
+| Pruebas | Vitest y Testing Library (unitarias), Cypress (de punta a punta) |
+| Despliegue | Docker (build con Node y servidor nginx) |
 | Diseño | Figma |
 | Control de versiones | Git y GitHub |
 
@@ -144,7 +154,7 @@ cp .env.example .env
 
 ## Ejecución y uso
 
-La aplicación usa los datos reales de la API, así que **primero hay que levantar el backend** (rama [`backend`](https://github.com/sharkreiza/TREKIA/tree/backend), con la base de datos creada y `npm run dev`). Luego, para levantar la aplicación en modo desarrollo:
+La aplicación usa los datos reales de la API, así que **primero hay que levantar el backend** (rama [`Backend`](https://github.com/sharkreiza/TREKIA/tree/Backend), con la base de datos creada y `npm run dev`). Luego, para levantar la aplicación en modo desarrollo:
 
 ```bash
 ionic serve
@@ -172,7 +182,11 @@ Vienen en `datos_prueba.sql` del backend. También se puede crear una cuenta nue
 - En **Grupos**, crear un grupo; con otra cuenta, solicitar unirse; con la cuenta creadora, aceptar la solicitud.
 - En **Comunidad**, publicar algo y aceptar o rechazar una solicitud de amistad.
 - En **Proponer ruta**, enviar una ruta; como administrador, aprobarla en **Rutas propuestas** y verla publicada en Explorar rutas.
-- En **Cuenta → Configuración**, cambiar la ubicación y guardar.
+- En **Cuenta → Configuración**, cambiar la ubicación, agregar un correo adicional y elegir otra zona horaria (por ejemplo, Isla de Pascua): las horas de los grupos se muestran en esa zona.
+- Con `sofia@gmail.com`, pedir unirse a un grupo de `usuario@gmail.com`; al entrar con `usuario@gmail.com`, la campana muestra la notificación y al tocarla lleva al grupo.
+- En **Grupos**, filtrar por horario (mañana, tarde o noche), fechas, ruta, tamaño del grupo y cupos disponibles.
+- En el detalle de una ruta, revisar el pronóstico de los próximos 7 días; en el detalle de un grupo que sale en menos de 16 días, el clima de ese día.
+- Abrir Explorar rutas, activar **Sin conexión** en las herramientas del navegador (F12 → Network → Offline) y recargar la pantalla: se muestran las rutas guardadas con un aviso.
 
 ## Conexión con el backend (EP 2.4 y 2.5)
 
@@ -196,16 +210,118 @@ Las capturas de los flujos funcionando con la API están en `docs/capturas-ep2/`
 
 ---
 
+## Entrega Final
+
+| Requisito | Qué se hizo | Dónde está |
+|---|---|---|
+| EF 1: funcionalidades completas | CRUD completo de rutas, grupos, solicitudes, comentarios, publicaciones, propuestas, amistades y notificaciones. Se implementaron RF-06 y RF-13, que estaban definidos pero no programados. Notificaciones dentro de la app y almacenamiento local para usar sin conexión | `pages/notificaciones/`, `context/NotificacionesContext.tsx`, `utils/almacenLocal.ts`, `hooks/useDatos.ts`, `pages/grupos/Grupos.tsx`, `pages/cuenta/Cuenta.tsx` |
+| EF 2: UI/UX y rendimiento | Campana con contador en el encabezado y en el menú, aviso cuando se trabaja sin conexión, filtros de grupos, validación del correo adicional. Las páginas se cargan por separado (`React.lazy`): el archivo principal bajó de 1.647 kB a 1.415 kB y Leaflet solo se descarga al abrir Inicio. La imagen de portada pasó de 1,4 MB (PNG) a 155 kB (JPG) y se eliminó una imagen sin uso de 640 kB. nginx comprime con gzip y guarda en caché las imágenes por 30 días | `routes/paginaDiferida.tsx`, `nginx.conf`, `public/assets/` |
+| EF 3: seguridad | Además de lo de la EP2 (JWT, rutas protegidas, roles), el backend quita el HTML de todos los textos (XSS) y el perfil de otros usuarios ya no muestra su correo. nginx agrega los headers `X-Content-Type-Options`, `X-Frame-Options` y `Referrer-Policy`. Al cerrar sesión se borran los datos guardados en el dispositivo | Rama `Backend`, `nginx.conf`, `context/AuthContext.tsx` |
+| EF 4: consultas eficientes | Índices en la base de datos, paginación en comentarios, publicaciones y notificaciones, y conteo de participantes con un solo `JOIN LATERAL`. El contador de la campana usa un endpoint que solo devuelve el número | Rama `Backend` |
+| EF 5: servicio externo | Pronóstico del tiempo de [Open-Meteo](https://open-meteo.com/). El backend lo consulta, lo guarda 30 minutos en caché y responde 503 si el servicio no está disponible; la app muestra el error sin afectar el resto de la pantalla | `components/Clima.tsx`, `services/climaService.ts` |
+| EF 6: Docker | `Dockerfile` en dos etapas (build con Node, servidor nginx) y `docker-compose.yml` en la rama `main` que levanta la base de datos, la API y el frontend | `Dockerfile`, `nginx.conf` |
+
+### Notificaciones
+
+El backend crea una notificación cada vez que pasa algo que le interesa al usuario (ver RF-14). La campana del encabezado consulta cada 60 segundos cuántas hay sin leer (solo mientras la pestaña está visible) y muestra un aviso cuando llega una nueva. En la página **Notificaciones** se pueden filtrar las no leídas, marcarlas como leídas (todas o una al tocarla, lo que además lleva a la pantalla correspondiente) y eliminarlas.
+
+### Almacenamiento local
+
+| Qué se guarda | Para qué | Cuánto dura |
+|---|---|---|
+| Token y datos del usuario | Mantener la sesión al cerrar el navegador | Hasta cerrar sesión o que el token expire |
+| Filtros de Explorar rutas y de Grupos | Que al volver a la pantalla se mantengan los últimos filtros | Hasta cerrar sesión |
+| Últimas rutas, grupos y detalles vistos | Mostrarlos si no hay conexión, con un aviso | 72 horas |
+
+Todo se guarda con el prefijo `trekia:` y se borra al cerrar sesión.
+
+## Matriz de trazabilidad
+
+Cada requerimiento funcional con la pantalla que lo implementa, el servicio del frontend, el endpoint del backend y la prueba que lo verifica. Las pruebas de Postman están en `backend/docs/Trekia.postman_collection.json` (rama `Backend`) y las de Cypress en `cypress/e2e/trekia.cy.ts`.
+
+| RF | Pantalla | Servicio | Endpoint | Prueba |
+|---|---|---|---|---|
+| RF-01 Mapa de rutas | Inicio (`pages/inicio/Inicio.tsx`) | `rutasService.obtenerRutas` | `GET /rutas` | Postman 3: Listar rutas |
+| RF-02 Detalle de ruta | Detalle de ruta (`pages/rutas/DetalleRuta.tsx`) | `rutasService.obtenerRuta` | `GET /rutas/:id` | Postman 3: Detalle de una ruta · Cypress: detalle de una ruta |
+| RF-03 Buscar y filtrar rutas | Explorar rutas (`pages/rutas/ExplorarRutas.tsx`) | `rutasService.obtenerRutas` | `GET /rutas?busqueda=&dificultad=...` | Postman 3: Filtrar y ordenar rutas, Intento de inyección SQL en la búsqueda |
+| RF-04 Comentarios | Detalle de ruta | `rutasService.comentar`, `eliminarComentario` | `GET/POST /rutas/:id/comentarios`, `PATCH/DELETE /comentarios/:id` | Postman 4: Comentarios · Postman 12: Comentarios paginados |
+| RF-05 Crear grupos | Crear grupo (`pages/grupos/CrearGrupo.tsx`) | `gruposService.crearGrupo` | `POST /grupos` | Postman 5: Crear grupo, Crear grupo con fecha pasada y cupo inválido |
+| RF-06 Buscar y filtrar grupos | Grupos (`pages/grupos/Grupos.tsx`) | `gruposService.obtenerGrupos` | `GET /grupos?horario=&desde=&hasta=&cupoMax=&conCupos=` | Postman 12: Filtrar grupos con cupos y tamaño máximo, por horario y rango de fechas |
+| RF-07 Participación en grupos | Detalle de grupo (`pages/grupos/DetalleGrupo.tsx`) | `solicitarParticipacion`, `responderSolicitud`, `obtenerMisSolicitudes` | `POST/GET/PATCH /grupos/:id/solicitudes`, `GET /solicitudes` | Postman 6: Solicitudes a grupos |
+| RF-08 Perfil | Cuenta (`pages/cuenta/Cuenta.tsx`) | `authService.obtenerUsuario`, `actualizarPerfil` | `GET /usuarios/:id`, `PATCH /usuarios/me` | Postman 2: Usuarios · Postman 12: Perfil de otro usuario no expone correos |
+| RF-09 Proponer rutas | Proponer ruta (`pages/rutas/ProponerRuta.tsx`) | `propuestasService` | `POST /propuestas` | Postman 7: Proponer una ruta |
+| RF-10 Moderación | Rutas propuestas (`pages/admin/`) | `propuestasService` | `GET /propuestas`, `PATCH /propuestas/:id/revision` | Postman 7: Aprobar propuesta, Revisar propuesta sin ser administrador · Cypress: el administrador entra al panel |
+| RF-11 Añadir amigos | Perfil de otro usuario (`pages/cuenta/Cuenta.tsx`) | `comunidadService.enviarSolicitudAmistad` | `POST /amistades` | Postman 9: Enviar solicitud de amistad |
+| RF-12 Amigos y solicitudes | Comunidad (`pages/comunidad/Comunidad.tsx`) | `comunidadService` | `GET /amistades`, `GET /amistades/solicitudes`, `PATCH/DELETE /amistades/:id` | Postman 9: Amistades |
+| RF-13 Configuración de la cuenta | Cuenta → Configuración | `authService.actualizarPerfil` | `PATCH /usuarios/me` (`correoAdicional`, `zonaHoraria`) | Postman 12: Configurar correo adicional y zona horaria, datos inválidos, correo igual al principal · Vitest: `formatos.test.ts` |
+| RF-14 Notificaciones | Notificaciones (`pages/notificaciones/`) y campana (`components/AppHeader.tsx`) | `notificacionesService` | `GET /notificaciones`, `GET /notificaciones/no-leidas`, `PATCH /notificaciones/:id`, `PATCH /notificaciones/leidas`, `DELETE /notificaciones/:id` | Postman 12: Notificaciones · Cypress: el usuario ve sus notificaciones |
+| RF-15 Pronóstico del clima | Detalle de ruta y de grupo (`components/Clima.tsx`) | `climaService.obtenerClima` | `GET /rutas/:id/clima` | Postman 12: Clima de una ruta, días fuera de rango, ruta que no existe · Cypress: detalle de una ruta |
+
+| RNF | Cómo se cumple | Prueba |
+|---|---|---|
+| RNF-01 Rendimiento | Carga diferida de páginas, imágenes optimizadas, gzip, índices y paginación | Lighthouse o pestaña Network del navegador |
+| RNF-02 Seguridad | `RutaPrivada` en el frontend y `requireAuth` / `requireRol` en el backend | Cypress: sin sesión redirige, el usuario no entra a administración · Postman: casos 401 y 403 |
+| RNF-03 Credenciales | bcrypt en el backend | Postman 1: Registrar usuario nuevo |
+| RNF-04 Usabilidad | Menú lateral fijo en web, menú desplegable en móvil, campana siempre visible | Revisión manual |
+| RNF-05 Responsivo | `IonSplitPane` y CSS con grilla adaptable | Revisión en modo dispositivo |
+| RNF-06 Accesibilidad | Etiquetas en los campos, `aria-label` en la campana y en los botones con solo ícono | Revisión manual |
+| RNF-07 Integridad | Permisos por dueño o administrador en cada endpoint | Postman: casos 403 |
+| RNF-08 Sin conexión | `useDatos` con caché en `localStorage` | Vitest: `almacenLocal.test.ts` |
+
+## Progreso entre entregas
+
+| | EP1 | EP2 | Entrega Final |
+|---|---|---|---|
+| Frontend | Prototipo en Figma y pantallas en Ionic con datos de ejemplo, rutas protegidas y navegación | Todas las pantallas conectadas a la API, JWT, roles, interceptores y manejo de errores | Notificaciones, clima, filtros de grupos, configuración de la cuenta, uso sin conexión, carga diferida |
+| Backend | — | Express, PostgreSQL, API REST con CRUD, bcrypt, validaciones y protección contra inyección SQL | Notificaciones, integración con Open-Meteo, sanitización XSS, índices y paginación |
+| Pruebas | — | 92 peticiones y 203 verificaciones en Postman | 113 peticiones y 258 verificaciones en Postman, pruebas unitarias con Vitest y de punta a punta con Cypress |
+| Despliegue | — | Ejecución local con `npm` | Docker y docker-compose |
+
+Correcciones respecto de la EP2:
+
+- RF-06 (filtrar grupos por horario y cantidad de participantes) y RF-13 (correo adicional y zona horaria) estaban en los requerimientos pero no estaban programados.
+- El perfil de otro usuario mostraba su correo; ahora solo muestra los datos públicos.
+- Los grupos de prueba tenían fechas que ya habían pasado.
+- La prueba de Cypress era la de la plantilla de Ionic y fallaba.
+- `capacitor.config.ts` tenía el `appId` y el nombre de la plantilla (`io.ionic.starter`, `frontend`).
+
+## Pruebas
+
+```bash
+cd frontend
+npm run test.unit          # Vitest: render de la app, formatos y zona horaria, almacenamiento local
+npm run test.e2e           # Cypress: necesita el backend y la app levantados
+```
+
+Cypress usa `http://localhost:5173` (`npm run dev`). Para probar contra Docker: `CYPRESS_BASE_URL=http://localhost:8080 npm run test.e2e`.
+
+## Ejecución con Docker
+
+El frontend tiene su `Dockerfile`: compila la app con Node y la sirve con nginx, que devuelve `index.html` en cualquier ruta para que funcione la navegación de React. La dirección de la API se define al construir la imagen, porque Vite la incrusta en el código:
+
+```bash
+cd frontend
+docker build --build-arg VITE_API_URL=http://localhost:3000/api -t trekia-frontend .
+docker run -p 8080:80 trekia-frontend
+```
+
+Para levantar todo el sistema (base de datos, API y frontend) con un solo comando, usar el `docker-compose.yml` de la rama `main`; las instrucciones están en su README.
+
+---
+
 ## Estructura del proyecto
 
 ```
 frontend/
+├── Dockerfile             Build con Node y servidor nginx
+├── nginx.conf             Rutas de React, gzip, caché y headers de seguridad
+├── cypress/e2e/           Pruebas de punta a punta
 ├── public/
 │   └── assets/            Imágenes
 └── src/
-    ├── components/        Componentes reutilizables (encabezado, menú lateral, estado de carga)
-    ├── context/           Manejo de la sesión y el token (AuthContext)
-    ├── hooks/             useDatos: carga de datos desde la API
+    ├── components/        Componentes reutilizables (encabezado con campana, menú lateral, estado de carga, clima)
+    ├── context/           Sesión y token (AuthContext) y contador de notificaciones (NotificacionesContext)
+    ├── hooks/             useDatos: carga de datos desde la API, con caché para usar sin conexión
     ├── pages/             Pantallas agrupadas por sección
     │   ├── admin/
     │   ├── auth/
@@ -213,11 +329,12 @@ frontend/
     │   ├── cuenta/
     │   ├── grupos/
     │   ├── inicio/
+    │   ├── notificaciones/
     │   └── rutas/
-    ├── routes/            Rutas, pestañas y rutas protegidas
+    ├── routes/            Rutas, pestañas, rutas protegidas y carga diferida de páginas
     ├── services/          Conexión con la API (api.ts) y servicios por sección
     ├── theme/             Colores y tipografías
-    ├── utils/             Formato de fechas y duraciones
+    ├── utils/             Formato de fechas según la zona horaria y almacenamiento local
     └── App.tsx
 ```
 
@@ -246,6 +363,7 @@ frontend/
 | `/app/grupos/:id` | Detalle de un grupo |
 | `/app/comunidad` | Comunidad, publicaciones y solicitudes de amistad |
 | `/app/propuesta` | Proponer una ruta |
+| `/app/notificaciones` | Notificaciones |
 | `/app/cuenta` | Cuenta, perfil y configuración |
 | `/app/cuenta/:userId` | Perfil de otro usuario |
 
@@ -306,5 +424,6 @@ frontend/
 - **Mapas:** © colaboradores de [OpenStreetMap](https://www.openstreetmap.org/copyright).
 - **Íconos:** [Ionicons](https://ionic.io/ionicons).
 - **Tipografías:** [Roboto](https://fonts.google.com/specimen/Roboto) y [Outfit](https://fonts.google.com/specimen/Outfit), de Google Fonts.
-- **Fotografía de las portadas (`fondo_trekking_2.png`):** _completar con el autor y la fuente de la imagen_.
+- **Pronóstico del tiempo:** datos de [Open-Meteo](https://open-meteo.com/) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)).
+- **Fotografía de las portadas (`fondo_trekking_2.jpg`):** _completar con el autor y la fuente de la imagen_.
 - **Fuentes del problema:** [SENAPRED](https://senapred.cl/), [CONAF](https://www.conaf.cl/) y [AllTrails](https://www.alltrails.com/).
