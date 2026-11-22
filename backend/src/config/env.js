@@ -41,6 +41,11 @@ const env = {
   },
   bcryptRounds: Number(process.env.BCRYPT_ROUNDS) || 12,
   corsOrigins: process.env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean),
+  clima: {
+    url: process.env.CLIMA_API_URL || 'https://api.open-meteo.com/v1/forecast',
+    timeoutMs: Number(process.env.CLIMA_TIMEOUT_MS) || 5000,
+    cacheMinutos: Number(process.env.CLIMA_CACHE_MINUTOS) || 30,
+  },
 };
 
 module.exports = env;

@@ -1,4 +1,5 @@
 const { fail } = require('../utils/respuesta');
+const HttpError = require('../utils/HttpError');
 
 // Mensajes específicos para restricciones UNIQUE del esquema (23505).
 const MENSAJES_UNIQUE = {
@@ -53,8 +54,9 @@ function errorHandler(err, req, res, next) {
     return fail(res, 413, 'El cuerpo de la petición es demasiado grande');
   }
 
-  // Errores lanzados por la propia app (HttpError)
-  if (err.status && err.status < 500) {
+  // Errores lanzados por la propia app (HttpError), por ejemplo un 503 cuando
+  // el servicio del clima no responde
+  if (err instanceof HttpError || (err.status && err.status < 500)) {
     return fail(res, err.status, err.message, err.errors || null);
   }
 

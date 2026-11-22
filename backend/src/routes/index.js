@@ -16,5 +16,6 @@ router.use('/solicitudes', require('./solicitudes.routes'));
 router.use('/propuestas', require('./propuestas.routes'));
 router.use('/publicaciones', require('./publicaciones.routes'));
 router.use('/amistades', require('./amistades.routes'));
+router.use('/notificaciones', require('./notificaciones.routes'));
 
 module.exports = router;

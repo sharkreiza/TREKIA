@@ -1,9 +1,11 @@
 const solicitudesRepo = require('../repositories/solicitudes.repo');
 const gruposRepo = require('../repositories/grupos.repo');
+const usuariosRepo = require('../repositories/usuarios.repo');
 const { buscarGrupoPropio } = require('./grupos.controller');
 const HttpError = require('../utils/HttpError');
 const { ok } = require('../utils/respuesta');
 const { esDuenoOAdmin } = require('../utils/permisos');
+const notificar = require('../utils/notificar');
 
 async function misSolicitudes(req, res) {
   const solicitudes = await solicitudesRepo.listarPorUsuario(req.usuario.id);
@@ -31,6 +33,14 @@ async function crear(req, res) {
     throw new HttpError(409, 'El grupo está completo');
   }
   const solicitud = await solicitudesRepo.crear(req.valid.id, req.usuario.id);
+
+  const solicitante = await usuariosRepo.buscarPorId(req.usuario.id);
+  await notificar(grupo.creador_id, {
+    tipo: 'solicitud_grupo',
+    mensaje: `${solicitante.nombre} quiere unirse a tu grupo ${grupo.nombre}`,
+    enlace: `/app/grupos/${grupo.id_grupo}`,
+  });
+
   return ok(res, solicitud, 'Solicitud enviada', 201);
 }
 
@@ -54,6 +64,13 @@ async function responder(req, res) {
   }
 
   const actualizada = await solicitudesRepo.responder(solicitud.id_solicitud, req.valid.estado);
+
+  await notificar(solicitud.usuario_id, {
+    tipo: 'respuesta_grupo',
+    mensaje: `Tu solicitud para unirte a ${grupo.nombre} fue ${req.valid.estado}`,
+    enlace: `/app/grupos/${grupo.id_grupo}`,
+  });
+
   return ok(res, actualizada, 'Solicitud respondida');
 }
 

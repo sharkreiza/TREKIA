@@ -2,6 +2,7 @@ const propuestasRepo = require('../repositories/propuestas.repo');
 const HttpError = require('../utils/HttpError');
 const { ok } = require('../utils/respuesta');
 const { esDuenoOAdmin } = require('../utils/permisos');
+const notificar = require('../utils/notificar');
 
 function esAdmin(usuario) {
   return usuario.rol === 'administrador';
@@ -44,7 +45,16 @@ async function revisar(req, res) {
   if (propuesta === undefined) {
     throw new HttpError(409, 'La propuesta ya fue revisada');
   }
-  const mensaje = propuesta.estado === 'aprobada' ? 'Propuesta aprobada y ruta publicada' : 'Propuesta rechazada';
+  const aprobada = propuesta.estado === 'aprobada';
+  await notificar(propuesta.usuario_id, {
+    tipo: 'propuesta',
+    mensaje: aprobada
+      ? `Tu propuesta ${propuesta.nombre} fue aprobada y ya está publicada`
+      : `Tu propuesta ${propuesta.nombre} fue rechazada`,
+    enlace: aprobada ? `/app/rutas/${propuesta.ruta_aprobada_id}` : '/app/cuenta',
+  });
+
+  const mensaje = aprobada ? 'Propuesta aprobada y ruta publicada' : 'Propuesta rechazada';
   return ok(res, propuesta, mensaje);
 }
 

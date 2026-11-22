@@ -9,7 +9,7 @@ async function listar(req, res) {
   if (!ruta) {
     throw new HttpError(404, 'Ruta no encontrada');
   }
-  const comentarios = await comentariosRepo.listarPorRuta(req.valid.id);
+  const comentarios = await comentariosRepo.listarPorRuta(req.valid.id, req.valid);
   return ok(res, comentarios);
 }
 

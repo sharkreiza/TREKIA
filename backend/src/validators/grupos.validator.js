@@ -1,5 +1,6 @@
 const { query, body } = require('express-validator');
 const { idParam, obligatorios } = require('./comun.validator');
+const { GRUPO_HORARIOS } = require('../db/columnas');
 
 const ESTADOS = ['abierto', 'cerrado', 'cancelado'];
 
@@ -12,6 +13,11 @@ const listarRules = [
   query('creadorId').optional().isInt({ min: 1 }).withMessage('Debe ser un entero positivo').toInt(),
   estado(query('estado')),
   query('desde').optional().isISO8601().withMessage('Debe ser una fecha válida (AAAA-MM-DD)'),
+  query('hasta').optional().isISO8601().withMessage('Debe ser una fecha válida (AAAA-MM-DD)'),
+  query('horario').optional().isIn(Object.keys(GRUPO_HORARIOS))
+    .withMessage(`Debe ser uno de: ${Object.keys(GRUPO_HORARIOS).join(', ')}`),
+  query('cupoMax').optional().isInt({ min: 2, max: 50 }).withMessage('Debe ser un entero entre 2 y 50').toInt(),
+  query('conCupos').optional().isBoolean().withMessage('Debe ser true o false').toBoolean(),
   query('limite').optional().isInt({ min: 1, max: 100 }).withMessage('Debe ser un entero entre 1 y 100').toInt(),
   query('pagina').optional().isInt({ min: 1 }).withMessage('Debe ser un entero positivo').toInt(),
 ];

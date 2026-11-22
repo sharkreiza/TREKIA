@@ -34,6 +34,11 @@ const listarRules = [
 
 const obtenerRules = [idParam()];
 
+const climaRules = [
+  idParam(),
+  query('dias').optional().isInt({ min: 1, max: 16 }).withMessage('Debe ser un entero entre 1 y 16').toInt(),
+];
+
 // Los límites siguen los tipos y CHECK de la tabla rutas.
 const camposRuta = [
   texto(body('nombre'), 150),
@@ -59,4 +64,4 @@ const crearRules = [
 
 const actualizarRules = [idParam(), ...camposRuta];
 
-module.exports = { listarRules, obtenerRules, crearRules, actualizarRules, camposRuta };
+module.exports = { listarRules, obtenerRules, climaRules, crearRules, actualizarRules, camposRuta };

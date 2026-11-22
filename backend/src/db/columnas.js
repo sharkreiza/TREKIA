@@ -16,7 +16,30 @@ const USUARIO_COLUMNAS_PUBLICAS = [
   'foto_perfil_url',
   'foto_portada_url',
   'fecha_creacion',
+  'correo_adicional',
+  'zona_horaria',
 ].join(', ');
+
+// Perfil que ven los demás usuarios: sin correos ni configuración de la cuenta.
+const USUARIO_COLUMNAS_PERFIL = [
+  'id_usuario',
+  'nombre',
+  'rol',
+  'ubicacion',
+  'biografia',
+  'foto_perfil_url',
+  'foto_portada_url',
+  'fecha_creacion',
+].join(', ');
+
+// Columnas que el usuario puede cambiar en PATCH /usuarios/me
+const USUARIO_ACTUALIZABLES = {
+  nombre: 'nombre',
+  ubicacion: 'ubicacion',
+  biografia: 'biografia',
+  correoAdicional: 'correo_adicional',
+  zonaHoraria: 'zona_horaria',
+};
 
 // ---------------------------------------------------------------- rutas
 const RUTA_COLUMNAS_PUBLICAS = [
@@ -105,6 +128,13 @@ const GRUPO_FILTROS_IGUALDAD = {
   estado: 'g.estado',
 };
 
+// Horario de salida para GET /grupos?horario=manana (horas desde, hasta)
+const GRUPO_HORARIOS = {
+  manana: [0, 12],
+  tarde: [12, 18],
+  noche: [18, 24],
+};
+
 const GRUPO_ACTUALIZABLES = {
   nombre: 'nombre',
   descripcion: 'descripcion',
@@ -154,8 +184,20 @@ const PROPUESTA_CAMPOS = {
   visibilidad: 'visibilidad',
 };
 
+const NOTIFICACION_COLUMNAS = [
+  'id_notificacion',
+  'usuario_id',
+  'tipo',
+  'mensaje',
+  'enlace',
+  'leida',
+  'fecha_creacion',
+].join(', ');
+
 module.exports = {
   USUARIO_COLUMNAS_PUBLICAS,
+  USUARIO_COLUMNAS_PERFIL,
+  USUARIO_ACTUALIZABLES,
   RUTA_COLUMNAS_PUBLICAS,
   RUTA_FILTROS_IGUALDAD,
   RUTA_FILTROS_RANGO,
@@ -164,7 +206,9 @@ module.exports = {
   RUTA_ACTUALIZABLES,
   GRUPO_COLUMNAS_PUBLICAS,
   GRUPO_FILTROS_IGUALDAD,
+  GRUPO_HORARIOS,
   GRUPO_ACTUALIZABLES,
   PROPUESTA_COLUMNAS_PUBLICAS,
   PROPUESTA_CAMPOS,
+  NOTIFICACION_COLUMNAS,
 };

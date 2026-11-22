@@ -4,7 +4,7 @@ const { ok } = require('../utils/respuesta');
 const { esDuenoOAdmin } = require('../utils/permisos');
 
 async function listar(req, res) {
-  const publicaciones = await publicacionesRepo.listar(req.usuario.id);
+  const publicaciones = await publicacionesRepo.listar(req.usuario.id, req.valid);
   return ok(res, publicaciones);
 }
 

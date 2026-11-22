@@ -1,5 +1,5 @@
 const { body } = require('express-validator');
-const { idParam } = require('./comun.validator');
+const { idParam, paginacion } = require('./comun.validator');
 
 const contenido = () =>
   body('contenido')
@@ -8,7 +8,7 @@ const contenido = () =>
     .trim()
     .isLength({ min: 1, max: 1000 }).withMessage('Debe tener entre 1 y 1000 caracteres');
 
-const listarRules = [idParam()];
+const listarRules = [idParam(), ...paginacion()];
 
 const crearRules = [idParam(), contenido()];
 

@@ -1,5 +1,5 @@
 const pool = require('../db/pool');
-const { USUARIO_COLUMNAS_PUBLICAS } = require('../db/columnas');
+const { USUARIO_COLUMNAS_PUBLICAS, USUARIO_COLUMNAS_PERFIL, USUARIO_ACTUALIZABLES } = require('../db/columnas');
 
 // Todas las consultas usan parámetros $1, $2... y la lista fija de columnas
 // públicas (nunca SELECT *), así password_hash no sale de esta capa.
@@ -7,6 +7,14 @@ const { USUARIO_COLUMNAS_PUBLICAS } = require('../db/columnas');
 async function buscarPorId(id) {
   const { rows } = await pool.query(
     `SELECT ${USUARIO_COLUMNAS_PUBLICAS} FROM usuarios WHERE id_usuario = $1`,
+    [id],
+  );
+  return rows[0] || null;
+}
+
+async function buscarPerfil(id) {
+  const { rows } = await pool.query(
+    `SELECT ${USUARIO_COLUMNAS_PERFIL} FROM usuarios WHERE id_usuario = $1`,
     [id],
   );
   return rows[0] || null;
@@ -33,13 +41,12 @@ async function crear({ nombre, correo, passwordHash }) {
 }
 
 async function actualizar(id, cambios) {
-  const columnas = { nombre: 'nombre', ubicacion: 'ubicacion', biografia: 'biografia' };
   const sets = [];
   const valores = [];
 
-  for (const [clave, columna] of Object.entries(columnas)) {
+  for (const [clave, columna] of Object.entries(USUARIO_ACTUALIZABLES)) {
     if (cambios[clave] !== undefined) {
-      valores.push(cambios[clave]);
+      valores.push(cambios[clave] === '' && clave === 'correoAdicional' ? null : cambios[clave]);
       sets.push(`${columna} = $${valores.length}`);
     }
   }
@@ -56,4 +63,4 @@ async function actualizar(id, cambios) {
   return rows[0] || null;
 }
 
-module.exports = { buscarPorId, buscarCredenciales, crear, actualizar };
+module.exports = { buscarPorId, buscarPerfil, buscarCredenciales, crear, actualizar };

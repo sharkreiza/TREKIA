@@ -1,5 +1,5 @@
 const { body } = require('express-validator');
-const { idParam } = require('./comun.validator');
+const { idParam, paginacion } = require('./comun.validator');
 
 const TIPOS = ['experiencia', 'consejo', 'foto', 'otro'];
 
@@ -13,6 +13,8 @@ const crearRules = [
     .isIn(TIPOS).withMessage(`Debe ser uno de: ${TIPOS.join(', ')}`),
 ];
 
+const listarRules = paginacion(50);
+
 const eliminarRules = [idParam()];
 
-module.exports = { crearRules, eliminarRules };
+module.exports = { listarRules, crearRules, eliminarRules };

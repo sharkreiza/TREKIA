@@ -1,4 +1,5 @@
 const rutasRepo = require('../repositories/rutas.repo');
+const openMeteo = require('../integraciones/openMeteo');
 const HttpError = require('../utils/HttpError');
 const { ok } = require('../utils/respuesta');
 
@@ -13,6 +14,19 @@ async function obtener(req, res) {
     throw new HttpError(404, 'Ruta no encontrada');
   }
   return ok(res, ruta);
+}
+
+async function clima(req, res) {
+  const ruta = await rutasRepo.buscarPorId(req.valid.id);
+  if (!ruta) {
+    throw new HttpError(404, 'Ruta no encontrada');
+  }
+  if (ruta.latitud === null || ruta.longitud === null) {
+    throw new HttpError(404, 'La ruta no tiene coordenadas para consultar el clima');
+  }
+
+  const dias = await openMeteo.pronostico(ruta.latitud, ruta.longitud, req.valid.dias || 7);
+  return ok(res, { ruta_id: ruta.id_ruta, fuente: 'Open-Meteo', dias });
 }
 
 async function actualizar(req, res) {
@@ -41,4 +55,4 @@ async function eliminar(req, res) {
   return ok(res, null, 'Ruta eliminada');
 }
 
-module.exports = { listar, obtener, crear, actualizar, eliminar };
+module.exports = { listar, obtener, clima, crear, actualizar, eliminar };

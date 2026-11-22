@@ -2,6 +2,7 @@ const amistadesRepo = require('../repositories/amistades.repo');
 const usuariosRepo = require('../repositories/usuarios.repo');
 const HttpError = require('../utils/HttpError');
 const { ok } = require('../utils/respuesta');
+const notificar = require('../utils/notificar');
 
 async function amigos(req, res) {
   const lista = await amistadesRepo.listarAmigos(req.usuario.id);
@@ -22,6 +23,14 @@ async function crear(req, res) {
     throw new HttpError(404, 'Usuario no encontrado');
   }
   const amistad = await amistadesRepo.crear(req.usuario.id, usuarioId);
+
+  const solicitante = await usuariosRepo.buscarPorId(req.usuario.id);
+  await notificar(usuarioId, {
+    tipo: 'amistad',
+    mensaje: `${solicitante.nombre} te envió una solicitud de amistad`,
+    enlace: '/app/comunidad',
+  });
+
   return ok(res, amistad, 'Solicitud de amistad enviada', 201);
 }
 
@@ -34,6 +43,16 @@ async function responder(req, res) {
     throw new HttpError(409, 'La solicitud ya fue respondida');
   }
   const actualizada = await amistadesRepo.responder(amistad.id_amistad, req.valid.estado);
+
+  if (actualizada.estado === 'aceptada') {
+    const destinatario = await usuariosRepo.buscarPorId(req.usuario.id);
+    await notificar(amistad.solicitante_id, {
+      tipo: 'respuesta_amistad',
+      mensaje: `${destinatario.nombre} aceptó tu solicitud de amistad`,
+      enlace: `/app/cuenta/${req.usuario.id}`,
+    });
+  }
+
   return ok(res, actualizada, 'Solicitud respondida');
 }
 

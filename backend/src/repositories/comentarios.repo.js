@@ -5,10 +5,12 @@ const SELECT_COMENTARIO = `
   FROM comentarios c
   JOIN usuarios u ON u.id_usuario = c.usuario_id`;
 
-async function listarPorRuta(rutaId) {
+async function listarPorRuta(rutaId, { limite = 20, pagina = 1 } = {}) {
   const { rows } = await pool.query(
-    `${SELECT_COMENTARIO} WHERE c.ruta_id = $1 ORDER BY c.fecha_creacion DESC, c.id_comentario DESC`,
-    [rutaId],
+    `${SELECT_COMENTARIO} WHERE c.ruta_id = $1
+     ORDER BY c.fecha_creacion DESC, c.id_comentario DESC
+     LIMIT $2 OFFSET $3`,
+    [rutaId, limite, (pagina - 1) * limite],
   );
   return rows;
 }

@@ -2,6 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const corsOptions = require('./config/cors');
+const sanitizar = require('./middlewares/sanitizar');
 const routes = require('./routes');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 
@@ -15,6 +16,7 @@ app.disable('x-powered-by');
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10kb' }));
+app.use(sanitizar);
 
 app.use('/api', routes);
 

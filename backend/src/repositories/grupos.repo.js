@@ -1,12 +1,18 @@
 const pool = require('../db/pool');
-const { GRUPO_COLUMNAS_PUBLICAS, GRUPO_FILTROS_IGUALDAD, GRUPO_ACTUALIZABLES } = require('../db/columnas');
+const { GRUPO_COLUMNAS_PUBLICAS, GRUPO_FILTROS_IGUALDAD, GRUPO_HORARIOS, GRUPO_ACTUALIZABLES } = require('../db/columnas');
 
+// Los participantes son el creador más las solicitudes aceptadas. El conteo se hace
+// con un JOIN LATERAL para poder filtrar por cupos sin repetir la subconsulta, y usa
+// el índice idx_solicitudes_grupo_estado (grupo_id, estado).
 const SELECT_GRUPO = `
   SELECT ${GRUPO_COLUMNAS_PUBLICAS},
-         1 + (SELECT COUNT(*)::int FROM solicitudes_grupo s
-              WHERE s.grupo_id = g.id_grupo AND s.estado = 'aceptada') AS participantes
+         1 + a.aceptadas AS participantes
   FROM grupos_trekking g
-  JOIN rutas r ON r.id_ruta = g.ruta_id`;
+  JOIN rutas r ON r.id_ruta = g.ruta_id
+  CROSS JOIN LATERAL (
+    SELECT COUNT(*)::int AS aceptadas FROM solicitudes_grupo s
+    WHERE s.grupo_id = g.id_grupo AND s.estado = 'aceptada'
+  ) a`;
 
 async function listar(filtros = {}) {
   const condiciones = [];
@@ -22,6 +28,28 @@ async function listar(filtros = {}) {
   if (filtros.desde !== undefined) {
     valores.push(filtros.desde);
     condiciones.push(`g.fecha_salida >= $${valores.length}`);
+  }
+
+  if (filtros.hasta !== undefined) {
+    valores.push(filtros.hasta);
+    condiciones.push(`g.fecha_salida < $${valores.length}::date + 1`);
+  }
+
+  if (filtros.horario !== undefined) {
+    const [desdeHora, hastaHora] = GRUPO_HORARIOS[filtros.horario];
+    valores.push(desdeHora, hastaHora);
+    condiciones.push(
+      `EXTRACT(HOUR FROM g.fecha_salida) >= $${valores.length - 1} AND EXTRACT(HOUR FROM g.fecha_salida) < $${valores.length}`,
+    );
+  }
+
+  if (filtros.cupoMax !== undefined) {
+    valores.push(filtros.cupoMax);
+    condiciones.push(`g.cupo_maximo <= $${valores.length}`);
+  }
+
+  if (filtros.conCupos) {
+    condiciones.push('1 + a.aceptadas < g.cupo_maximo');
   }
 
   const where = condiciones.length > 0 ? `WHERE ${condiciones.join(' AND ')}` : '';

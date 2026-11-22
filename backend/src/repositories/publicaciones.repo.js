@@ -5,13 +5,13 @@ const SELECT_PUBLICACION = `
   FROM publicaciones p
   JOIN usuarios u ON u.id_usuario = p.usuario_id`;
 
-async function listar(usuarioId) {
+async function listar(usuarioId, { limite = 20, pagina = 1 } = {}) {
   const { rows } = await pool.query(
     `${SELECT_PUBLICACION}
      WHERE p.visibilidad = 'publico' OR p.usuario_id = $1
      ORDER BY p.fecha_creacion DESC, p.id_publicacion DESC
-     LIMIT 50`,
-    [usuarioId],
+     LIMIT $2 OFFSET $3`,
+    [usuarioId, limite, (pagina - 1) * limite],
   );
   return rows;
 }

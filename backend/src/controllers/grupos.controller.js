@@ -1,7 +1,9 @@
 const gruposRepo = require('../repositories/grupos.repo');
+const solicitudesRepo = require('../repositories/solicitudes.repo');
 const HttpError = require('../utils/HttpError');
 const { ok } = require('../utils/respuesta');
 const { esDuenoOAdmin } = require('../utils/permisos');
+const notificar = require('../utils/notificar');
 
 async function listar(req, res) {
   const grupos = await gruposRepo.listar(req.valid);
@@ -47,6 +49,15 @@ async function actualizar(req, res) {
   if (actualizado === undefined) {
     throw new HttpError(400, 'No se envió ningún campo para actualizar');
   }
+
+  if (cambios.estado === 'cancelado' && grupo.estado !== 'cancelado') {
+    const solicitudes = await solicitudesRepo.listarPorGrupo(id);
+    await notificar(
+      solicitudes.filter((s) => s.estado === 'aceptada').map((s) => s.usuario_id),
+      { tipo: 'grupo_cancelado', mensaje: `El grupo ${grupo.nombre} fue cancelado`, enlace: `/app/grupos/${id}` },
+    );
+  }
+
   return ok(res, actualizado, 'Grupo actualizado');
 }
 
