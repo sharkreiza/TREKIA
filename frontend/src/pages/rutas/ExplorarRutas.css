@@ -1,0 +1,31 @@
+.rutas-buscador {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.rutas-buscador ion-input {
+  flex: 1;
+  min-width: 220px;
+  --background: #ffffff;
+  border-radius: 10px;
+}
+
+.rutas-vacio {
+  color: var(--trekia-gris);
+}
+
+.filtros-modal h2 {
+  margin: 0 0 16px;
+  font-size: 26px;
+}
+
+.filtros-acciones {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
