@@ -190,6 +190,28 @@ ALTER TABLE public.grupos_trekking ALTER COLUMN id_grupo ADD GENERATED ALWAYS AS
     CACHE 1
 );
 
+CREATE TABLE public.notificaciones (
+    id_notificacion integer NOT NULL,
+    usuario_id integer NOT NULL,
+    tipo character varying(30) NOT NULL,
+    mensaje character varying(300) NOT NULL,
+    enlace character varying(200),
+    leida boolean DEFAULT false NOT NULL,
+    fecha_creacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT chk_tipo_notificacion CHECK (((tipo)::text = ANY ((ARRAY['solicitud_grupo'::character varying, 'respuesta_grupo'::character varying, 'grupo_cancelado'::character varying, 'amistad'::character varying, 'respuesta_amistad'::character varying, 'propuesta'::character varying])::text[])))
+);
+
+ALTER TABLE public.notificaciones OWNER TO postgres;
+
+ALTER TABLE public.notificaciones ALTER COLUMN id_notificacion ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.notificaciones_id_notificacion_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
 CREATE TABLE public.propuestas_ruta (
     id_propuesta integer NOT NULL,
     usuario_id integer NOT NULL,
@@ -319,7 +341,10 @@ CREATE TABLE public.usuarios (
     biografia text,
     foto_perfil_url text,
     foto_portada_url text,
-    fecha_creacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    fecha_creacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    correo_adicional character varying(150),
+    zona_horaria character varying(60) DEFAULT 'America/Santiago'::character varying NOT NULL,
+    CONSTRAINT chk_correo_adicional_distinto CHECK (((correo_adicional IS NULL) OR ((correo_adicional)::text <> (correo)::text)))
 );
 
 ALTER TABLE public.usuarios OWNER TO postgres;
@@ -352,6 +377,9 @@ ALTER TABLE ONLY public.fotos_ruta
 ALTER TABLE ONLY public.grupos_trekking
     ADD CONSTRAINT grupos_trekking_pkey PRIMARY KEY (id_grupo);
 
+ALTER TABLE ONLY public.notificaciones
+    ADD CONSTRAINT notificaciones_pkey PRIMARY KEY (id_notificacion);
+
 ALTER TABLE ONLY public.rutas_guardadas
     ADD CONSTRAINT pk_rutas_guardadas PRIMARY KEY (usuario_id, ruta_id);
 
@@ -382,6 +410,36 @@ ALTER TABLE ONLY public.usuarios
 CREATE UNIQUE INDEX uq_amistad_par_unico ON public.amistades USING btree (LEAST(solicitante_id, destinatario_id), GREATEST(solicitante_id, destinatario_id));
 
 --
+-- Índices para las consultas más usadas
+--
+
+CREATE INDEX idx_amistades_destinatario_estado ON public.amistades USING btree (destinatario_id, estado);
+
+CREATE INDEX idx_comentarios_ruta_fecha ON public.comentarios USING btree (ruta_id, fecha_creacion DESC);
+
+CREATE INDEX idx_grupos_fecha_salida ON public.grupos_trekking USING btree (fecha_salida);
+
+CREATE INDEX idx_grupos_ruta ON public.grupos_trekking USING btree (ruta_id);
+
+CREATE INDEX idx_grupos_creador ON public.grupos_trekking USING btree (creador_id);
+
+CREATE INDEX idx_notificaciones_usuario_fecha ON public.notificaciones USING btree (usuario_id, fecha_creacion DESC);
+
+CREATE INDEX idx_notificaciones_no_leidas ON public.notificaciones USING btree (usuario_id) WHERE (leida = false);
+
+CREATE INDEX idx_propuestas_usuario ON public.propuestas_ruta USING btree (usuario_id);
+
+CREATE INDEX idx_propuestas_estado ON public.propuestas_ruta USING btree (estado);
+
+CREATE INDEX idx_publicaciones_fecha ON public.publicaciones USING btree (fecha_creacion DESC);
+
+CREATE INDEX idx_rutas_visibilidad_region ON public.rutas USING btree (visibilidad, region);
+
+CREATE INDEX idx_solicitudes_usuario ON public.solicitudes_grupo USING btree (usuario_id);
+
+CREATE INDEX idx_solicitudes_grupo_estado ON public.solicitudes_grupo USING btree (grupo_id, estado);
+
+--
 -- Claves foráneas
 --
 
@@ -408,6 +466,9 @@ ALTER TABLE ONLY public.grupos_trekking
 
 ALTER TABLE ONLY public.grupos_trekking
     ADD CONSTRAINT fk_grupos_ruta FOREIGN KEY (ruta_id) REFERENCES public.rutas(id_ruta);
+
+ALTER TABLE ONLY public.notificaciones
+    ADD CONSTRAINT fk_notificaciones_usuario FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id_usuario) ON DELETE CASCADE;
 
 ALTER TABLE ONLY public.propuestas_ruta
     ADD CONSTRAINT fk_propuesta_revisor FOREIGN KEY (revisado_por) REFERENCES public.usuarios(id_usuario);

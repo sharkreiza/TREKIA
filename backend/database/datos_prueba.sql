@@ -22,9 +22,10 @@ INSERT INTO comentarios (usuario_id, ruta_id, contenido) VALUES
   (1, 2, 'Llevar mínimo 3 litros de agua, no hay donde recargar.');
 
 INSERT INTO grupos_trekking (creador_id, ruta_id, nombre, descripcion, fecha_salida, cupo_maximo, dificultad) VALUES
-  (1, 2, 'Ascenso Cerro Provincia', 'Salida de día completo. Llevar 3 litros de agua y bloqueador.', '2026-11-15 07:00', 8, 'alta'),
-  (1, 3, 'Ruta a Parque La Campana', 'Caminata tranquila, apta para principiantes.', '2026-11-08 11:00', 10, 'baja'),
-  (2, 1, 'Salida fotográfica Laguna El Yeso', 'Nos juntamos temprano para aprovechar la luz de la mañana.', '2026-11-30 08:30', 12, 'moderada');
+  (1, 2, 'Ascenso Cerro Provincia', 'Salida de día completo. Llevar 3 litros de agua y bloqueador.', '2026-12-13 07:00', 8, 'alta'),
+  (1, 3, 'Ruta a Parque La Campana', 'Caminata tranquila, apta para principiantes.', '2026-12-06 11:00', 10, 'baja'),
+  (2, 1, 'Salida fotográfica Laguna El Yeso', 'Nos juntamos temprano para aprovechar la luz de la mañana.', '2026-12-20 08:30', 12, 'moderada'),
+  (3, 4, 'Atardecer en Lago Peñuelas', 'Vuelta corta al lago para ver el atardecer. Llevar linterna para el regreso.', '2026-12-10 18:30', 4, 'baja');
 
 INSERT INTO solicitudes_grupo (grupo_id, usuario_id, estado) VALUES
   (1, 2, 'aceptada'),
@@ -44,3 +45,8 @@ INSERT INTO publicaciones (usuario_id, contenido, tipo) VALUES
 INSERT INTO amistades (solicitante_id, destinatario_id, estado) VALUES
   (3, 1, 'pendiente'),
   (4, 1, 'aceptada');
+
+INSERT INTO notificaciones (usuario_id, tipo, mensaje, enlace, leida) VALUES
+  (2, 'solicitud_grupo', 'usuario_trekia quiere unirse a tu grupo Salida fotográfica Laguna El Yeso', '/app/grupos/3', false),
+  (2, 'respuesta_grupo', 'Tu solicitud para unirte a Ascenso Cerro Provincia fue aceptada', '/app/grupos/1', true),
+  (1, 'amistad', 'Sofía Torres te envió una solicitud de amistad', '/app/comunidad', false);
