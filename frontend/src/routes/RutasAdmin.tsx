@@ -1,7 +1,9 @@
 import { IonRouterOutlet } from '@ionic/react';
 import { Navigate, Route } from 'react-router-dom';
-import Propuestas from '../pages/admin/Propuestas';
-import DetallePropuesta from '../pages/admin/DetallePropuesta';
+import { paginaDiferida } from './paginaDiferida';
+
+const Propuestas = paginaDiferida(() => import('../pages/admin/Propuestas'));
+const DetallePropuesta = paginaDiferida(() => import('../pages/admin/DetallePropuesta'));
 
 export default function RutasAdmin() {
   return (

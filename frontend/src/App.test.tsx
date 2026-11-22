@@ -1,8 +1,9 @@
-import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders without crashing', () => {
-  const { baseElement } = render(<App />);
-  expect(baseElement).toBeDefined();
+test('sin sesión muestra el inicio de sesión', async () => {
+  localStorage.clear();
+  sessionStorage.clear();
+  render(<App />);
+  expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
 });
