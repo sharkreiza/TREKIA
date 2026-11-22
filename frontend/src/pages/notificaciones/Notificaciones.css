@@ -1,0 +1,61 @@
+.notificaciones-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.notificaciones-encabezado h1 {
+  margin: 0;
+}
+
+.notificaciones-lista {
+  margin-top: 16px;
+  padding: 0;
+  border: 1px solid var(--trekia-borde);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.notificaciones-lista ion-icon[slot='start'] {
+  color: var(--ion-color-primary);
+  font-size: 22px;
+}
+
+.notificacion-nueva {
+  --background: #eaf0eb;
+}
+
+.notificacion-mensaje {
+  margin: 0;
+  color: var(--ion-text-color) !important;
+  font-size: 15px !important;
+}
+
+.notificacion-nueva .notificacion-mensaje {
+  font-weight: 600;
+}
+
+.notificacion-cuando {
+  margin: 4px 0 0;
+  font-size: 12px !important;
+}
+
+.notificacion-punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ion-color-danger);
+}
+
+.notificaciones-vacio {
+  margin-top: 40px;
+  text-align: center;
+  color: var(--trekia-gris);
+}
+
+.notificaciones-vacio ion-icon {
+  font-size: 48px;
+}

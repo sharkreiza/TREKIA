@@ -1,6 +1,7 @@
 import { IonApp, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { AuthProvider } from './context/AuthContext';
+import { NotificacionesProvider } from './context/NotificacionesContext';
 import Rutas from './routes/Rutas';
 
 import '@ionic/react/css/core.css';
@@ -18,9 +19,11 @@ export default function App() {
   return (
     <IonApp>
       <AuthProvider>
-        <IonReactRouter>
-          <Rutas />
-        </IonReactRouter>
+        <NotificacionesProvider>
+          <IonReactRouter>
+            <Rutas />
+          </IonReactRouter>
+        </NotificacionesProvider>
       </AuthProvider>
     </IonApp>
   );

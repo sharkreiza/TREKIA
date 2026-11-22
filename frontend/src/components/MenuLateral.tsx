@@ -1,10 +1,11 @@
-import { IonButton, IonContent, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonMenu, IonMenuToggle } from '@ionic/react';
+import { IonBadge, IonButton, IonContent, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonMenu, IonMenuToggle } from '@ionic/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   add, chatbubblesOutline, documentTextOutline, exitOutline, homeOutline,
-  mapOutline, peopleOutline, personCircleOutline,
+  mapOutline, notificationsOutline, peopleOutline, personCircleOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../context/AuthContext';
+import { useNotificaciones } from '../context/NotificacionesContext';
 import './MenuLateral.css';
 
 const opcionesUsuario = [
@@ -12,6 +13,7 @@ const opcionesUsuario = [
   { titulo: 'Explorar rutas', url: '/app/rutas', icono: mapOutline },
   { titulo: 'Grupos de trekking', url: '/app/grupos', icono: peopleOutline },
   { titulo: 'Comunidad', url: '/app/comunidad', icono: chatbubblesOutline },
+  { titulo: 'Notificaciones', url: '/app/notificaciones', icono: notificationsOutline },
   { titulo: 'Cuenta', url: '/app/cuenta', icono: personCircleOutline },
 ];
 
@@ -21,6 +23,7 @@ const opcionesAdmin = [
 
 export default function MenuLateral() {
   const { user, logout } = useAuth();
+  const { noLeidas } = useNotificaciones();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -41,6 +44,7 @@ export default function MenuLateral() {
         >
           <IonIcon slot="start" icon={icono} />
           <IonLabel>{titulo}</IonLabel>
+          {url === '/app/notificaciones' && noLeidas > 0 && <IonBadge slot="end" color="danger">{noLeidas}</IonBadge>}
         </IonItem>
       </IonMenuToggle>
     );

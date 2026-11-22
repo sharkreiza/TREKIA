@@ -1,15 +1,17 @@
 import { IonRouterOutlet } from '@ionic/react';
 import { Navigate, Route } from 'react-router-dom';
+import { paginaDiferida } from './paginaDiferida';
 
-import Inicio from '../pages/inicio/Inicio';
-import ExplorarRutas from '../pages/rutas/ExplorarRutas';
-import DetalleRuta from '../pages/rutas/DetalleRuta';
-import ProponerRuta from '../pages/rutas/ProponerRuta';
-import Grupos from '../pages/grupos/Grupos';
-import CrearGrupo from '../pages/grupos/CrearGrupo';
-import DetalleGrupo from '../pages/grupos/DetalleGrupo';
-import Comunidad from '../pages/comunidad/Comunidad';
-import Cuenta from '../pages/cuenta/Cuenta';
+const Inicio = paginaDiferida(() => import('../pages/inicio/Inicio'));
+const ExplorarRutas = paginaDiferida(() => import('../pages/rutas/ExplorarRutas'));
+const DetalleRuta = paginaDiferida(() => import('../pages/rutas/DetalleRuta'));
+const ProponerRuta = paginaDiferida(() => import('../pages/rutas/ProponerRuta'));
+const Grupos = paginaDiferida(() => import('../pages/grupos/Grupos'));
+const CrearGrupo = paginaDiferida(() => import('../pages/grupos/CrearGrupo'));
+const DetalleGrupo = paginaDiferida(() => import('../pages/grupos/DetalleGrupo'));
+const Comunidad = paginaDiferida(() => import('../pages/comunidad/Comunidad'));
+const Cuenta = paginaDiferida(() => import('../pages/cuenta/Cuenta'));
+const Notificaciones = paginaDiferida(() => import('../pages/notificaciones/Notificaciones'));
 
 export default function Tabs() {
   return (
@@ -29,6 +31,8 @@ export default function Tabs() {
       <Route path="cuenta/:userId" element={<Cuenta />} />
 
       <Route path="propuesta" element={<ProponerRuta />} />
+
+      <Route path="notificaciones" element={<Notificaciones />} />
 
       <Route index element={<Navigate to="inicio" replace />} />
     </IonRouterOutlet>
