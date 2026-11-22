@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Usuario, login as loginService, obtenerSesion } from '../services/authService';
 import { leerToken } from '../services/api';
+import { borrarTodoLocal } from '../utils/almacenLocal';
+import { usarZonaHoraria } from '../utils/formatos';
 
 interface AuthContextType {
   user: Usuario | null;
@@ -23,8 +25,11 @@ function sesionGuardada(): Usuario | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Usuario | null>(sesionGuardada());
 
+  usarZonaHoraria(user?.zonaHoraria);
+
   function logout() {
     setUser(null);
+    borrarTodoLocal();
     localStorage.removeItem('usuario');
     localStorage.removeItem('token');
     sessionStorage.removeItem('usuario');

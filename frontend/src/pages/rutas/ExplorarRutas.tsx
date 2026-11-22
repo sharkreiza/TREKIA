@@ -10,22 +10,34 @@ import TarjetaRuta from '../../components/TarjetaRuta';
 import Estado from '../../components/Estado';
 import { useDatos } from '../../hooks/useDatos';
 import { Filtros, filtrosVacios, obtenerRutas } from '../../services/rutasService';
+import { guardarLocal, leerLocal } from '../../utils/almacenLocal';
 import './ExplorarRutas.css';
 
-export default function ExplorarRutas() {
-  const [parametros] = useSearchParams();
-  const [filtros, setFiltros] = useState<Filtros>({
+function filtrosIniciales(parametros: URLSearchParams): Filtros {
+  if (parametros.toString() === '') {
+    return { ...filtrosVacios, ...leerLocal<Filtros>('filtros-rutas') };
+  }
+  return {
     ...filtrosVacios,
     busqueda: parametros.get('busqueda') ?? '',
     region: parametros.get('region') ?? '',
     dificultad: parametros.get('dificultad') ?? '',
     orden: parametros.get('orden') ?? '',
-  });
+  };
+}
+
+export default function ExplorarRutas() {
+  const [parametros] = useSearchParams();
+  const [filtros, setFiltros] = useState<Filtros>(() => filtrosIniciales(parametros));
   const [busqueda, setBusqueda] = useState(filtros.busqueda);
   const [borrador, setBorrador] = useState<Filtros>(filtros);
   const [abierto, setAbierto] = useState(false);
 
-  const rutas = useDatos(() => obtenerRutas(filtros), [], [filtros]);
+  const rutas = useDatos(() => obtenerRutas(filtros), [], [filtros], `rutas-${JSON.stringify(filtros)}`);
+
+  useEffect(() => {
+    guardarLocal('filtros-rutas', filtros);
+  }, [filtros]);
 
   useEffect(() => {
     const espera = setTimeout(() => {
@@ -69,7 +81,7 @@ export default function ExplorarRutas() {
           </IonButton>
         </div>
 
-        <Estado cargando={rutas.cargando} error={rutas.error} reintentar={rutas.recargar} />
+        <Estado cargando={rutas.cargando} error={rutas.error} sinConexion={rutas.sinConexion} reintentar={rutas.recargar} />
         {!rutas.cargando && !rutas.error && rutas.datos.length === 0 && (
           <p className="rutas-vacio">No encontramos rutas con esos filtros.</p>
         )}

@@ -1,6 +1,7 @@
 import { IonButton, IonContent, IonPage, useIonToast } from '@ionic/react';
 import { useParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
+import Clima from '../../components/Clima';
 import Estado from '../../components/Estado';
 import { claseDificultad } from '../../components/TarjetaRuta';
 import { useAuth } from '../../context/AuthContext';
@@ -8,7 +9,7 @@ import { useDatos } from '../../hooks/useDatos';
 import {
   Solicitud, obtenerGrupo, obtenerMisSolicitudes, obtenerSolicitudesGrupo, responderSolicitud, solicitarParticipacion,
 } from '../../services/gruposService';
-import { capitalizar } from '../../utils/formatos';
+import { capitalizar, fechaLocal } from '../../utils/formatos';
 import '../comunidad/Comunidad.css';
 
 export default function DetalleGrupo() {
@@ -79,6 +80,10 @@ export default function DetalleGrupo() {
         <p>{datos.fecha}, {datos.hora}</p>
         <p>{datos.participantes} de {datos.cupos} participantes</p>
         {datos.estado !== 'abierto' && <p>Este grupo está {datos.estado}.</p>}
+
+        {datos.estado === 'abierto' && new Date(datos.fechaSalida) > new Date() && (
+          <Clima rutaId={datos.rutaId} fecha={fechaLocal(datos.fechaSalida)} />
+        )}
 
         {!esCreador && (
           miSolicitud ? (

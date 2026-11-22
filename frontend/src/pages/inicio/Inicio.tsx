@@ -28,8 +28,8 @@ export default function Inicio() {
   const marcadores = useRef<L.LayerGroup | null>(null);
   const [busqueda, setBusqueda] = useState('');
 
-  const rutas = useDatos(() => obtenerRutas(), []);
-  const grupos = useDatos(proximosGrupos, []);
+  const rutas = useDatos(() => obtenerRutas(), [], [], 'rutas-inicio');
+  const grupos = useDatos(proximosGrupos, [], [], 'grupos-inicio');
 
   const recientes = [...rutas.datos].sort((a, b) => b.id - a.id).slice(0, 3);
 
@@ -124,7 +124,7 @@ export default function Inicio() {
           <div>
             <div className="inicio-panel">
               <h2>Rutas recientes</h2>
-              <Estado cargando={rutas.cargando} error={rutas.error} reintentar={rutas.recargar} />
+              <Estado cargando={rutas.cargando} error={rutas.error} sinConexion={rutas.sinConexion} reintentar={rutas.recargar} />
               {recientes.map((ruta) => (
                 <TarjetaRuta key={ruta.id} ruta={ruta} />
               ))}

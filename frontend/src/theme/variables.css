@@ -36,3 +36,24 @@
 h1, h2, h3 {
   font-family: 'Outfit', 'Roboto', sans-serif;
 }
+
+.aviso-sin-conexion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fff4e0;
+  color: #6b4a00;
+  font-size: 14px;
+}
+
+.aviso-sin-conexion ion-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.aviso-sin-conexion span {
+  flex: 1;
+}

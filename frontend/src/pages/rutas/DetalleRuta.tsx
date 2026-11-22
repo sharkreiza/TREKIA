@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { IonButton, IonContent, IonItem, IonLabel, IonList, IonPage, IonTextarea, useIonToast } from '@ionic/react';
 import { useParams } from 'react-router-dom';
 import AppHeader from '../../components/AppHeader';
+import Clima from '../../components/Clima';
 import Estado from '../../components/Estado';
 import { claseDificultad } from '../../components/TarjetaRuta';
 import { useAuth } from '../../context/AuthContext';
@@ -17,7 +18,7 @@ export default function DetalleRuta() {
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
 
-  const ruta = useDatos(() => obtenerRuta(Number(id)), null, [id]);
+  const ruta = useDatos(() => obtenerRuta(Number(id)), null, [id], `ruta-${id}`);
   const comentarios = useDatos(() => obtenerComentarios(Number(id)), [], [id]);
 
   async function publicarComentario() {
@@ -49,7 +50,7 @@ export default function DetalleRuta() {
       <IonPage>
         <AppHeader titulo="Ruta" volverA="/app/rutas" />
         <IonContent className="ion-padding">
-          <Estado cargando={ruta.cargando} error={ruta.error} />
+          <Estado cargando={ruta.cargando} error={ruta.error} reintentar={ruta.recargar} />
         </IonContent>
       </IonPage>
     );
@@ -61,6 +62,7 @@ export default function DetalleRuta() {
     <IonPage>
       <AppHeader titulo={datos.nombre} volverA="/app/rutas" />
       <IonContent className="ion-padding">
+        <Estado cargando={false} error="" sinConexion={ruta.sinConexion} reintentar={ruta.recargar} />
         <h1>{datos.nombre}</h1>
         <span className={claseDificultad(datos.dificultad)}>{datos.dificultad}</span>
         <p>{datos.descripcion}</p>
@@ -87,6 +89,8 @@ export default function DetalleRuta() {
             <IonLabel slot="end">{datos.tipo}</IonLabel>
           </IonItem>
         </IonList>
+
+        {datos.lat !== null && datos.lng !== null && !ruta.sinConexion && <Clima rutaId={datos.id} />}
 
         <IonButton className="ion-margin-top" routerLink={`/app/grupos?rutaId=${datos.id}`}>
           Ver grupos para esta ruta
