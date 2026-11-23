@@ -13,7 +13,7 @@ API REST de Trekia, construida con **Node.js + Express** y **PostgreSQL**. La in
 | Integrante | Responsabilidades (EP2 y Entrega Final) |
 |---|---|
 | Antonia Albar | _por definir_ |
-| Vicente Girardin | _EP 2.6: validación de usuarios y manejo de sesiones · EF: cambio de contraseña (endpoint, pruebas y documentación)_ |
+| Vicente Girardin | _EP 2.6: validación de usuarios y manejo de sesiones_ |
 | Camila Ramirez | _EP 2.1: servidor backend · EP 2.3: API REST y CRUD · EP 2.7: pruebas en Postman y documentación de endpoints · EF: notificaciones, integración con Open-Meteo, sanitización XSS, índices, paginación y Docker_ |
 
 ## Tecnologías
@@ -187,7 +187,7 @@ Todas las respuestas son JSON con el formato `{ "ok", "data", "message", "errors
 
 ## Pruebas
 
-La colección [`backend/docs/Trekia.postman_collection.json`](backend/docs/Trekia.postman_collection.json) tiene 120 peticiones con 276 verificaciones, que cubren todos los endpoints y sus casos de error. La carpeta **2. Usuarios** incluye el cambio de contraseña (`PATCH /usuarios/me/password`) con sus casos de error. La carpeta **12. Entrega Final** prueba las notificaciones, el correo adicional y la zona horaria, los filtros nuevos de grupos, la sanitización XSS, la paginación y el clima. Se importa en Postman y se ejecuta en orden con el Collection Runner, con el servidor encendido y la base de datos recién cargada con `datos_prueba.sql`.
+La colección [`backend/docs/Trekia.postman_collection.json`](backend/docs/Trekia.postman_collection.json) tiene 113 peticiones con 258 verificaciones, que cubren todos los endpoints y sus casos de error. La carpeta **12. Entrega Final** prueba las notificaciones, el correo adicional y la zona horaria, los filtros nuevos de grupos, la sanitización XSS, la paginación y el clima. Se importa en Postman y se ejecuta en orden con el Collection Runner, con el servidor encendido y la base de datos recién cargada con `datos_prueba.sql`.
 
 También se puede ejecutar desde la terminal:
 
