@@ -16,7 +16,7 @@ La rama `main` reúne el frontend y el backend para ejecutar todo el sistema con
 | Integrante | Responsabilidades |
 |---|---|
 | Antonia Albar | _EP1: partes 1.1 y 1.2_ |
-| Vicente Girardin | _EP1: Figma · EP 2.6: validación de usuarios y manejo de sesiones_ |
+| Vicente Girardin | _EP1: Figma · EP 2.6: validación de usuarios y manejo de sesiones · EF: cambio de contraseña (endpoint, formulario y pruebas)_ |
 | Camila Ramirez | _EP1: 1.4, 1.5 y 1.6 · EP 2.1: servidor backend · EP 2.3: API REST y CRUD · EP 2.4 y 2.5: integración con la API, JWT y roles · EP 2.7: pruebas en Postman y documentación de endpoints · EF: notificaciones, almacenamiento local, clima con Open-Meteo, filtros de grupos, configuración de la cuenta, seguridad, optimización y Docker_ |
 
 ## Descripción del sistema
@@ -79,7 +79,7 @@ El problema se divide en tres partes:
 | RF-10 | Moderación | Administrador | El sistema deberá permitir al administrador revisar, aprobar o rechazar las rutas propuestas por los usuarios. |
 | RF-11 | Añadir amigos | Usuario | El sistema deberá permitir enviar solicitudes de amistad a otros usuarios desde sus perfiles. |
 | RF-12 | Gestión de lista de amigos y solicitudes | Usuario | El sistema deberá permitir ver la lista de amigos y aceptar o rechazar las solicitudes de amistad recibidas. |
-| RF-13 | Configuración de la cuenta | Usuario | El sistema deberá permitir modificar los datos de la cuenta, agregar un correo adicional y seleccionar la zona horaria. |
+| RF-13 | Configuración de la cuenta | Usuario | El sistema deberá permitir modificar los datos de la cuenta, agregar un correo adicional, seleccionar la zona horaria y cambiar la contraseña. |
 | RF-14 | Notificaciones | Usuario y administrador | El sistema deberá avisar al usuario cuando alguien solicite unirse a su grupo, cuando respondan su solicitud, cuando se cancele un grupo al que pertenece, cuando reciba o le acepten una solicitud de amistad y cuando se revise su propuesta de ruta. |
 | RF-15 | Pronóstico del clima | Usuario | El sistema deberá mostrar el pronóstico del tiempo de cada ruta y el del día de salida de cada grupo, obtenido de un servicio externo. |
 
@@ -337,7 +337,7 @@ Cada requerimiento funcional con la pantalla que lo implementa, el servicio del 
 | RF-10 Moderación | Rutas propuestas (`pages/admin/`) | `propuestasService` | `GET /propuestas`, `PATCH /propuestas/:id/revision` | Postman 7: Aprobar propuesta, Revisar propuesta sin ser administrador · Cypress: el administrador entra al panel |
 | RF-11 Añadir amigos | Perfil de otro usuario (`pages/cuenta/Cuenta.tsx`) | `comunidadService.enviarSolicitudAmistad` | `POST /amistades` | Postman 9: Enviar solicitud de amistad |
 | RF-12 Amigos y solicitudes | Comunidad (`pages/comunidad/Comunidad.tsx`) | `comunidadService` | `GET /amistades`, `GET /amistades/solicitudes`, `PATCH/DELETE /amistades/:id` | Postman 9: Amistades |
-| RF-13 Configuración de la cuenta | Cuenta → Configuración | `authService.actualizarPerfil` | `PATCH /usuarios/me` (`correoAdicional`, `zonaHoraria`) | Postman 12: Configurar correo adicional y zona horaria, datos inválidos, correo igual al principal · Vitest: `formatos.test.ts` |
+| RF-13 Configuración de la cuenta | Cuenta → Configuración | `authService.actualizarPerfil` | `PATCH /usuarios/me` (`correoAdicional`, `zonaHoraria`), `PATCH /usuarios/me/password` | Postman 12: Configurar correo adicional y zona horaria, datos inválidos, correo igual al principal · Postman 2: Cambiar contraseña y sus casos de error · Vitest: `formatos.test.ts` |
 | RF-14 Notificaciones | Notificaciones (`pages/notificaciones/`) y campana (`components/AppHeader.tsx`) | `notificacionesService` | `GET /notificaciones`, `GET /notificaciones/no-leidas`, `PATCH /notificaciones/:id`, `PATCH /notificaciones/leidas`, `DELETE /notificaciones/:id` | Postman 12: Notificaciones · Cypress: el usuario ve sus notificaciones |
 | RF-15 Pronóstico del clima | Detalle de ruta y de grupo (`components/Clima.tsx`) | `climaService.obtenerClima` | `GET /rutas/:id/clima` | Postman 12: Clima de una ruta, días fuera de rango, ruta que no existe · Cypress: detalle de una ruta |
 
@@ -345,7 +345,7 @@ Cada requerimiento funcional con la pantalla que lo implementa, el servicio del 
 |---|---|---|
 | RNF-01 Rendimiento | Carga diferida de páginas, imágenes optimizadas, gzip, índices y paginación | Lighthouse o pestaña Network del navegador |
 | RNF-02 Seguridad | `RutaPrivada` en el frontend y `requireAuth` / `requireRol` en el backend | Cypress: sin sesión redirige, el usuario no entra a administración · Postman: casos 401 y 403 |
-| RNF-03 Credenciales | bcrypt en el backend | Postman 1: Registrar usuario nuevo |
+| RNF-03 Credenciales | bcrypt en el backend, también al cambiar la contraseña (se pide la actual) | Postman 1: Registrar usuario nuevo · Postman 2: Iniciar sesión con la contraseña anterior y con la nueva |
 | RNF-04 Usabilidad | Menú lateral fijo en web, menú desplegable en móvil, campana siempre visible | Revisión manual |
 | RNF-05 Responsivo | `IonSplitPane` y CSS con grilla adaptable | Revisión en modo dispositivo |
 | RNF-06 Accesibilidad | Etiquetas en los campos, `aria-label` en la campana y en los botones con solo ícono | Revisión manual |
@@ -358,7 +358,7 @@ Cada requerimiento funcional con la pantalla que lo implementa, el servicio del 
 |---|---|---|---|
 | Frontend | Prototipo en Figma y pantallas en Ionic con datos de ejemplo, rutas protegidas y navegación | Todas las pantallas conectadas a la API, JWT, roles, interceptores y manejo de errores | Notificaciones, clima, filtros de grupos, configuración de la cuenta, uso sin conexión, carga diferida |
 | Backend | — | Express, PostgreSQL, API REST con CRUD, bcrypt, validaciones y protección contra inyección SQL | Notificaciones, integración con Open-Meteo, sanitización XSS, índices y paginación |
-| Pruebas | — | 92 peticiones y 203 verificaciones en Postman | 113 peticiones y 258 verificaciones en Postman, pruebas unitarias con Vitest y de punta a punta con Cypress |
+| Pruebas | — | 92 peticiones y 203 verificaciones en Postman | 120 peticiones y 276 verificaciones en Postman, pruebas unitarias con Vitest y de punta a punta con Cypress |
 | Despliegue | — | Ejecución local con `npm` | Docker y docker-compose |
 
 Correcciones respecto de la EP2:
@@ -373,7 +373,7 @@ Correcciones respecto de la EP2:
 
 | Tipo | Herramienta | Qué cubre | Cómo ejecutarla |
 |---|---|---|---|
-| API | Postman / Newman | 113 peticiones y 258 verificaciones: todos los endpoints con sus casos de error, más la carpeta **12. Entrega Final** | `cd backend && npx newman run docs/Trekia.postman_collection.json` |
+| API | Postman / Newman | 120 peticiones y 276 verificaciones: todos los endpoints con sus casos de error, más la carpeta **12. Entrega Final** | `cd backend && npx newman run docs/Trekia.postman_collection.json` |
 | Unitarias | Vitest | Render de la app sin sesión, formatos de fecha según la zona horaria, almacenamiento local | `cd frontend && npm run test.unit` |
 | De punta a punta | Cypress | Redirección sin sesión, validación del login, credenciales incorrectas, detalle de ruta con clima, bloqueo de administración, notificaciones, acceso del administrador | `cd frontend && CYPRESS_BASE_URL=http://localhost:8080 npm run test.e2e` |
 
