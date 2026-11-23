@@ -16,7 +16,7 @@ La rama `main` reúne el frontend y el backend para ejecutar todo el sistema con
 | Integrante | Responsabilidades |
 |---|---|
 | Antonia Albar | _EP1: partes 1.1 y 1.2_ |
-| Vicente Girardin | _EP1: Figma · EP 2.6: validación de usuarios y manejo de sesiones_ |
+| Vicente Girardin | _EP1: Figma · EP 2.6: validación de usuarios y manejo de sesiones · EF: cambio de contraseña (endpoint, formulario y pruebas)_ |
 | Camila Ramirez | _EP1: 1.4, 1.5 y 1.6 · EP 2.1: servidor backend · EP 2.3: API REST y CRUD · EP 2.4 y 2.5: integración con la API, JWT y roles · EP 2.7: pruebas en Postman y documentación de endpoints · EF: notificaciones, almacenamiento local, clima con Open-Meteo, filtros de grupos, configuración de la cuenta, seguridad, optimización y Docker_ |
 
 ## Descripción del sistema
