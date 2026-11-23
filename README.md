@@ -358,7 +358,7 @@ Cada requerimiento funcional con la pantalla que lo implementa, el servicio del 
 |---|---|---|---|
 | Frontend | Prototipo en Figma y pantallas en Ionic con datos de ejemplo, rutas protegidas y navegación | Todas las pantallas conectadas a la API, JWT, roles, interceptores y manejo de errores | Notificaciones, clima, filtros de grupos, configuración de la cuenta, uso sin conexión, carga diferida |
 | Backend | — | Express, PostgreSQL, API REST con CRUD, bcrypt, validaciones y protección contra inyección SQL | Notificaciones, integración con Open-Meteo, sanitización XSS, índices y paginación |
-| Pruebas | — | 92 peticiones y 203 verificaciones en Postman | 113 peticiones y 258 verificaciones en Postman, pruebas unitarias con Vitest y de punta a punta con Cypress |
+| Pruebas | — | 92 peticiones y 203 verificaciones en Postman | 120 peticiones y 276 verificaciones en Postman, pruebas unitarias con Vitest y de punta a punta con Cypress |
 | Despliegue | — | Ejecución local con `npm` | Docker y docker-compose |
 
 Correcciones respecto de la EP2:
@@ -373,7 +373,7 @@ Correcciones respecto de la EP2:
 
 | Tipo | Herramienta | Qué cubre | Cómo ejecutarla |
 |---|---|---|---|
-| API | Postman / Newman | 113 peticiones y 258 verificaciones: todos los endpoints con sus casos de error, más la carpeta **12. Entrega Final** | `cd backend && npx newman run docs/Trekia.postman_collection.json` |
+| API | Postman / Newman | 120 peticiones y 276 verificaciones: todos los endpoints con sus casos de error, más la carpeta **12. Entrega Final** | `cd backend && npx newman run docs/Trekia.postman_collection.json` |
 | Unitarias | Vitest | Render de la app sin sesión, formatos de fecha según la zona horaria, almacenamiento local | `cd frontend && npm run test.unit` |
 | De punta a punta | Cypress | Redirección sin sesión, validación del login, credenciales incorrectas, detalle de ruta con clima, bloqueo de administración, notificaciones, acceso del administrador | `cd frontend && CYPRESS_BASE_URL=http://localhost:8080 npm run test.e2e` |
 
