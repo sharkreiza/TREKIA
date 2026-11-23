@@ -69,3 +69,7 @@ export async function actualizarPerfil(cambios: {
 }) {
   return convertirUsuario(await modificar<UsuarioApi>('/usuarios/me', cambios));
 }
+
+export async function cambiarPassword(passwordActual: string, passwordNueva: string) {
+  await modificar<null>('/usuarios/me/password', { passwordActual, passwordNueva });
+}

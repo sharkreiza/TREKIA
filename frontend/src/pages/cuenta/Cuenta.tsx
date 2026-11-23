@@ -6,6 +6,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { personCircle } from 'ionicons/icons';
 import AppHeader from '../../components/AppHeader';
+import CambiarPassword from '../../components/CambiarPassword';
 import Estado from '../../components/Estado';
 import { claseDificultad } from '../../components/TarjetaRuta';
 import { useAuth } from '../../context/AuthContext';
@@ -295,6 +296,8 @@ export default function Cuenta() {
             </IonButton>
           </div>
         )}
+
+        {pestana === 'configuracion' && <CambiarPassword />}
       </IonContent>
     </IonPage>
   );
