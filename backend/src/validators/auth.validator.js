@@ -13,6 +13,18 @@ const correo = () =>
     .isEmail().withMessage('El correo no es válido').bail()
     .isLength({ max: 150 }).withMessage('El correo no puede superar 150 caracteres');
 
+// Reglas de una contraseña nueva. Se usan al registrarse y al cambiar la
+// contraseña, así las dos exigen exactamente lo mismo.
+const passwordSegura = (campo) =>
+  body(campo)
+    .exists({ values: 'falsy' }).withMessage('La contraseña es obligatoria').bail()
+    .isString().withMessage('La contraseña debe ser texto').bail()
+    .isLength({ min: 8, max: 72 }).withMessage('La contraseña debe tener entre 8 y 72 caracteres').bail()
+    .custom((value) => Buffer.byteLength(value, 'utf8') <= MAX_BYTES_BCRYPT)
+    .withMessage('La contraseña es demasiado larga (máximo 72 bytes)').bail()
+    .matches(/\p{L}/u).withMessage('La contraseña debe contener al menos una letra').bail()
+    .matches(/\d/).withMessage('La contraseña debe contener al menos un número');
+
 const registroRules = [
   body('nombre')
     .exists({ values: 'falsy' }).withMessage('El nombre es obligatorio').bail()
@@ -22,14 +34,7 @@ const registroRules = [
 
   correo(),
 
-  body('password')
-    .exists({ values: 'falsy' }).withMessage('La contraseña es obligatoria').bail()
-    .isString().withMessage('La contraseña debe ser texto').bail()
-    .isLength({ min: 8, max: 72 }).withMessage('La contraseña debe tener entre 8 y 72 caracteres').bail()
-    .custom((value) => Buffer.byteLength(value, 'utf8') <= MAX_BYTES_BCRYPT)
-    .withMessage('La contraseña es demasiado larga (máximo 72 bytes)').bail()
-    .matches(/\p{L}/u).withMessage('La contraseña debe contener al menos una letra').bail()
-    .matches(/\d/).withMessage('La contraseña debe contener al menos un número'),
+  passwordSegura('password'),
 
   // No hay regla para "rol": aunque venga en el body, matchedData lo descarta.
 ];
@@ -41,4 +46,4 @@ const loginRules = [
     .isString().withMessage('La contraseña debe ser texto'),
 ];
 
-module.exports = { registroRules, loginRules };
+module.exports = { registroRules, loginRules, passwordSegura };

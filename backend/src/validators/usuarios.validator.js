@@ -1,4 +1,5 @@
 const { body } = require('express-validator');
+const { passwordSegura } = require('./auth.validator');
 
 const texto = (campo, min, max) =>
   body(campo).optional().isString().withMessage('Debe ser texto').bail().trim()
@@ -18,4 +19,16 @@ const perfilRules = [
     .isIn(ZONAS_HORARIAS).withMessage('La zona horaria no es válida'),
 ];
 
-module.exports = { perfilRules, ZONAS_HORARIAS };
+// Cambio de contraseña: se pide la actual (para que alguien con el celular
+// desbloqueado o un token robado no pueda cambiarla) y una nueva con las mismas
+// reglas del registro.
+const cambioPasswordRules = [
+  body('passwordActual')
+    .exists({ values: 'falsy' }).withMessage('La contraseña actual es obligatoria').bail()
+    .isString().withMessage('La contraseña actual debe ser texto'),
+  passwordSegura('passwordNueva').bail()
+    .custom((nueva, { req }) => nueva !== req.body.passwordActual)
+    .withMessage('La contraseña nueva debe ser distinta a la actual'),
+];
+
+module.exports = { perfilRules, cambioPasswordRules, ZONAS_HORARIAS };
