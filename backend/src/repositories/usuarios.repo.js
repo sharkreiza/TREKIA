@@ -29,6 +29,24 @@ async function buscarCredenciales(correo) {
   return rows[0] || null;
 }
 
+// Lee el hash por id: la usa solo el cambio de contraseña para verificar la actual.
+async function buscarHashPorId(id) {
+  const { rows } = await pool.query(
+    'SELECT password_hash FROM usuarios WHERE id_usuario = $1',
+    [id],
+  );
+  return rows[0] ? rows[0].password_hash : null;
+}
+
+// Recibe el hash ya calculado con bcrypt: la contraseña en texto plano nunca llega aquí.
+async function actualizarPassword(id, passwordHash) {
+  const { rowCount } = await pool.query(
+    'UPDATE usuarios SET password_hash = $1 WHERE id_usuario = $2',
+    [passwordHash, id],
+  );
+  return rowCount === 1;
+}
+
 // El rol lo decide el servidor: se pasa siempre 'usuario' como parámetro fijo.
 async function crear({ nombre, correo, passwordHash }) {
   const { rows } = await pool.query(
@@ -63,4 +81,12 @@ async function actualizar(id, cambios) {
   return rows[0] || null;
 }
 
-module.exports = { buscarPorId, buscarPerfil, buscarCredenciales, crear, actualizar };
+module.exports = {
+  buscarPorId,
+  buscarPerfil,
+  buscarCredenciales,
+  buscarHashPorId,
+  actualizarPassword,
+  crear,
+  actualizar,
+};

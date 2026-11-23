@@ -145,6 +145,27 @@ Edita el perfil del usuario de la sesión. **Con sesión.** Todos los campos son
 | `400` | Datos inválidos, correo adicional igual al principal o no se envió ningún campo |
 | `401` | Sin sesión |
 
+### `PATCH /usuarios/me/password`
+Cambia la contraseña del usuario de la sesión. **Con sesión.** Pide la contraseña actual para que alguien que tenga el token (o el celular desbloqueado) no pueda cambiarla.
+
+| Campo | Tipo | Reglas |
+|---|---|---|
+| `passwordActual` | texto | Obligatoria. Se compara con el hash guardado usando bcrypt |
+| `passwordNueva` | texto | Las mismas reglas del registro: entre 8 y 72 caracteres (máximo 72 bytes), al menos una letra y un número. Debe ser distinta a la actual |
+
+```json
+{ "passwordActual": "Trekia123", "passwordNueva": "Montana2026" }
+```
+
+La nueva contraseña se guarda con `bcrypt.hash` y nunca se devuelve. Las contraseñas no pasan por la sanitización XSS, porque se guardan como hash y limpiarlas cambiaría lo que escribió el usuario. Hay un límite de 10 intentos cada 15 minutos por IP.
+
+| Respuesta | Caso |
+|---|---|
+| `200` | Contraseña actualizada (`data` es `null`) |
+| `400` | Datos inválidos, contraseña nueva débil o igual a la actual, o contraseña actual incorrecta (en `errors`, campo `passwordActual`). Se usa 400 y no 401 porque la app cierra la sesión al recibir un 401 |
+| `401` | Sin sesión |
+| `429` | Demasiados intentos |
+
 ---
 
 ## Rutas

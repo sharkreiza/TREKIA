@@ -87,7 +87,7 @@ Otros cambios:
 
 ## Pruebas
 
-La colección de Postman tiene ahora 113 peticiones y 258 verificaciones. La carpeta **12. Entrega Final** prueba:
+La colección de Postman tiene ahora 120 peticiones y 276 verificaciones. La carpeta **2. Usuarios** incluye además el cambio de contraseña: sin sesión (401), contraseña actual incorrecta (400), contraseña nueva débil o igual a la actual (400), cambio correcto (200) y login con la contraseña anterior (401) y con la nueva (200). La carpeta **12. Entrega Final** prueba:
 
 - Notificaciones: sin sesión (401), lista del usuario, contador, marcar una, marcar la de otra persona (404), filtro inválido (400), marcar todas, eliminar.
 - RF-13: guardar correo adicional y zona horaria, valores inválidos (400), correo igual al principal (400), perfil de otra persona sin correos.

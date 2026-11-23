@@ -26,4 +26,12 @@ const registroLimiter = limitador({
   message: 'Demasiados registros desde esta IP. Intenta de nuevo más tarde',
 });
 
-module.exports = { loginLimiter, registroLimiter };
+// 10 intentos de cambio de contraseña cada 15 minutos por IP: evita que alguien
+// con un token robado pruebe contraseñas actuales hasta adivinar la correcta.
+const cambioPasswordLimiter = limitador({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  message: 'Demasiados intentos de cambio de contraseña. Intenta de nuevo en 15 minutos',
+});
+
+module.exports = { loginLimiter, registroLimiter, cambioPasswordLimiter };

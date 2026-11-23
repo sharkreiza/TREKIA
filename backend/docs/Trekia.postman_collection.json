@@ -26,6 +26,10 @@
       "value": ""
     },
     {
+      "key": "correoOtro",
+      "value": ""
+    },
+    {
       "key": "correoNuevo",
       "value": ""
     },
@@ -166,7 +170,8 @@
                   "  pm.expect(json.data.usuario).to.not.have.property('password_hash');",
                   "});",
                   "pm.collectionVariables.set('tokenOtro', json.data.token);",
-                  "pm.collectionVariables.set('otroId', json.data.usuario.id_usuario);"
+                  "pm.collectionVariables.set('otroId', json.data.usuario.id_usuario);",
+                  "pm.collectionVariables.set('correoOtro', json.data.usuario.correo);"
                 ]
               }
             },
@@ -836,6 +841,378 @@
                   "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
                   "  pm.expect(json.ok).to.eql(false);",
                   "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar contraseña sin token",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me",
+                "password"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passwordActual\": \"Prueba123\",\n  \"passwordNueva\": \"Prueba456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar contraseña con la actual incorrecta",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me",
+                "password"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passwordActual\": \"Incorrecta1\",\n  \"passwordNueva\": \"Prueba456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400 (no 401, para no cerrar la sesión)', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});",
+                  "pm.test('Marca el error en passwordActual', () => {",
+                  "  pm.expect(json.errors.map((e) => e.campo)).to.include('passwordActual');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar contraseña por una débil",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me",
+                "password"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passwordActual\": \"Prueba123\",\n  \"passwordNueva\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});",
+                  "pm.test('Marca el error en passwordNueva', () => {",
+                  "  pm.expect(json.errors.map((e) => e.campo)).to.include('passwordNueva');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar contraseña por la misma",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me",
+                "password"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passwordActual\": \"Prueba123\",\n  \"passwordNueva\": \"Prueba123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});",
+                  "pm.test('Marca el error en passwordNueva', () => {",
+                  "  pm.expect(json.errors.map((e) => e.campo)).to.include('passwordNueva');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar contraseña",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtro}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me",
+                "password"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passwordActual\": \"Prueba123\",\n  \"passwordNueva\": \"Prueba456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.test('No devuelve la contraseña ni el hash', () => {",
+                  "  const texto = pm.response.text();",
+                  "  pm.expect(texto).to.not.include('Prueba456');",
+                  "  pm.expect(texto).to.not.include('password_hash');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar sesión con la contraseña anterior",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoOtro}}\",\n  \"password\": \"Prueba123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar sesión con la contraseña nueva",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoOtro}}\",\n  \"password\": \"Prueba456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Formato { ok, data, message, errors }', () => {",
+                  "  pm.expect(json).to.have.all.keys('ok', 'data', 'message', 'errors');",
+                  "  pm.expect(json.ok).to.eql(true);",
+                  "});",
+                  "pm.collectionVariables.set('tokenOtro', json.data.token);"
                 ]
               }
             }
