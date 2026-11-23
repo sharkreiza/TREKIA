@@ -12,7 +12,7 @@
 | Integrante | Responsabilidades |
 |---|---|
 | Antonia Albar | _parte 1.1 y 1.2_ |
-| Vicente Girardin | _EP1: Figma · EP 2.6: validación de usuarios y manejo de sesiones · EF: cambio de contraseña (formulario, endpoint y pruebas)_ |
+| Vicente Girardin | _figma_ |
 | Camila Ramirez | _1.4,1.5,1.6 · EP 2.4 y 2.5: integración con la API, sesión con JWT y roles · EF: notificaciones, almacenamiento local, clima, filtros de grupos, configuración de la cuenta, optimización y Docker_ |
 
 ## Descripción del sistema
@@ -78,7 +78,7 @@ El problema se divide en tres partes:
 | RF-10 | Moderación | Administrador | El sistema deberá permitir al administrador revisar, aprobar o rechazar las rutas propuestas por los usuarios. |
 | RF-11 | Añadir amigos | Usuario | El sistema deberá permitir enviar solicitudes de amistad a otros usuarios desde sus perfiles. |
 | RF-12 | Gestión de lista de amigos y solicitudes | Usuario | El sistema deberá permitir ver la lista de amigos y aceptar o rechazar las solicitudes de amistad recibidas. |
-| RF-13 | Configuración de la cuenta | Usuario | El sistema deberá permitir modificar los datos de la cuenta, agregar un correo adicional, seleccionar la zona horaria y cambiar la contraseña. |
+| RF-13 | Configuración de la cuenta | Usuario | El sistema deberá permitir modificar los datos de la cuenta, agregar un correo adicional y seleccionar la zona horaria. |
 | RF-14 | Notificaciones | Usuario y administrador | El sistema deberá avisar al usuario cuando alguien solicite unirse a su grupo, cuando respondan su solicitud, cuando se cancele un grupo al que pertenece, cuando reciba o le acepten una solicitud de amistad y cuando se revise su propuesta de ruta. |
 | RF-15 | Pronóstico del clima | Usuario | El sistema deberá mostrar el pronóstico del tiempo de cada ruta y el del día de salida de cada grupo, obtenido de un servicio externo. |
 
@@ -274,7 +274,7 @@ Cada requerimiento funcional con la pantalla que lo implementa, el servicio del 
 |---|---|---|---|
 | Frontend | Prototipo en Figma y pantallas en Ionic con datos de ejemplo, rutas protegidas y navegación | Todas las pantallas conectadas a la API, JWT, roles, interceptores y manejo de errores | Notificaciones, clima, filtros de grupos, configuración de la cuenta, uso sin conexión, carga diferida |
 | Backend | — | Express, PostgreSQL, API REST con CRUD, bcrypt, validaciones y protección contra inyección SQL | Notificaciones, integración con Open-Meteo, sanitización XSS, índices y paginación |
-| Pruebas | — | 92 peticiones y 203 verificaciones en Postman | 120 peticiones y 276 verificaciones en Postman, pruebas unitarias con Vitest y de punta a punta con Cypress |
+| Pruebas | — | 92 peticiones y 203 verificaciones en Postman | 113 peticiones y 258 verificaciones en Postman, pruebas unitarias con Vitest y de punta a punta con Cypress |
 | Despliegue | — | Ejecución local con `npm` | Docker y docker-compose |
 
 Correcciones respecto de la EP2:
